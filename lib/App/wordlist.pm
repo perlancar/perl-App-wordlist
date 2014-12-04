@@ -122,8 +122,6 @@ sub wordlist {
     my $or = $args{or};
     my $arg = $args{arg} // [];
 
-    use DD; dd $arg;
-
     if ($action eq 'grep') {
 
         # convert /.../ in arg to regex
@@ -168,7 +166,7 @@ sub wordlist {
                             }
                         }
                     }
-                    if (!$or) {
+                    if (!$or || !@$arg) {
                         push @res, $word;
                     }
                 }
