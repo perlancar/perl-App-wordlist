@@ -53,6 +53,16 @@ $SPEC{wordlist} = {
             schema => ['array*' => of => 'str*'],
             summary => 'Select one or more wordlist modules',
             cmdline_aliases => {w=>{}},
+            element_completion => sub {
+                require Complete::Util;
+
+                my %args = @_;
+                Complete::Util::complete_array_elem(
+                    word  => $args{word},
+                    array => [sort keys %{ _list_installed() }],
+                    ci    => 1,
+                );
+            },
         },
         or => {
             summary => 'Use OR logic instead of the default AND',
