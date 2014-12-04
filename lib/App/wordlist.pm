@@ -126,8 +126,8 @@ sub wordlist {
 
         # convert /.../ in arg to regex
         for (@$arg) {
-            if (m!\A/(.+)/\z!) {
-                $_ = $ci ? qr/$_/i : qr/$_/;
+            if (m!\A/(.*)/\z!) {
+                $_ = $ci ? qr/$1/i : qr/$1/;
             } else {
                 $_ = lc($_) if $ci;
             }
