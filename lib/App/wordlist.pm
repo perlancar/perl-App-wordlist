@@ -122,6 +122,7 @@ $SPEC{wordlist} = {
             summary => 'Filter by regex',
         },
     ],
+    'cmdline.default_format' => 'text-simple',
 };
 sub wordlist {
     my %args = @_;
@@ -197,7 +198,7 @@ sub wordlist {
                 push @res, $_;
             }
         }
-        [200, "OK", \@res];
+        [200, "OK", \@res, {'cmdline.default_format' => 'text'}];
 
     } elsif ($action eq 'list_cpan') {
 
