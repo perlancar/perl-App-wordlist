@@ -198,7 +198,8 @@ sub wordlist {
                 push @res, $_;
             }
         }
-        [200, "OK", \@res, {'cmdline.default_format' => 'text'}];
+        [200, "OK", \@res,
+         {('cmdline.default_format' => 'text') x !!$args{detail}}];
 
     } elsif ($action eq 'list_cpan') {
 
