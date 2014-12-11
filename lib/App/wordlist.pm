@@ -49,6 +49,15 @@ $SPEC{wordlist} = {
             schema  => 'bool',
             default => 1,
         },
+        len => {
+            schema  => 'int*',
+        },
+        minlen => {
+            schema  => 'int*',
+        },
+        maxlen => {
+            schema  => 'int*',
+        },
         wordlist => {
             schema => ['array*' => of => 'str*'],
             summary => 'Select one or more wordlist modules',
@@ -159,6 +168,14 @@ sub wordlist {
             $obj->each_word(
                 sub {
                     my $word = shift;
+
+                    return if defined($args{len}) &&
+                        length($word) != $args{len};
+                    return if defined($args{minlen}) &&
+                        length($word) < $args{minlen};
+                    return if defined($args{maxlen}) &&
+                        length($word) > $args{maxlen};
+
                     my $cmpword = $ci ? lc($word) : $word;
                     for (@$arg) {
                         my $match =
@@ -231,8 +248,6 @@ See the included script L<wordlist>.
 =head1 TODO
 
 In -l --detail, show summary (extract from POD Name or # ABSTRACT).
-
-Support Games::Word::Phraselist::*
 
 Option --random (plus -n) to generate (or n) random word(s).
 
