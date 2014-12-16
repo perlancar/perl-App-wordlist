@@ -52,10 +52,10 @@ $SPEC{wordlist} = {
         len => {
             schema  => 'int*',
         },
-        minlen => {
+        min_len => {
             schema  => 'int*',
         },
-        maxlen => {
+        max_len => {
             schema  => 'int*',
         },
         wordlist => {
@@ -171,10 +171,10 @@ sub wordlist {
 
                     return if defined($args{len}) &&
                         length($word) != $args{len};
-                    return if defined($args{minlen}) &&
-                        length($word) < $args{minlen};
-                    return if defined($args{maxlen}) &&
-                        length($word) > $args{maxlen};
+                    return if defined($args{min_len}) &&
+                        length($word) < $args{min_len};
+                    return if defined($args{max_len}) &&
+                        length($word) > $args{max_len};
 
                     my $cmpword = $ci ? lc($word) : $word;
                     for (@$arg) {
