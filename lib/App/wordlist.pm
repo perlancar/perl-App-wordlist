@@ -238,7 +238,7 @@ sub wordlist {
 }
 
 1;
-# ABSTRACT: Grep words from Games::Word::{Wordlist,Phraselist}::*
+# ABSTRACT:
 
 =head1 SYNOPSIS
 
