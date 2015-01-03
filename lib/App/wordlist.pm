@@ -250,17 +250,6 @@ sub wordlist {
 See the included script L<wordlist>.
 
 
-=head1 TODO
-
-In -l --detail, show summary (extract from POD Name or # ABSTRACT).
-
-Option --random (plus -n) to generate (or n) random word(s).
-
-Option -v (--invert-match) like grep.
-
-Implement -n (max result).
-
-
 =head1 SEE ALSO
 
 L<Games::Word::Wordlist>
