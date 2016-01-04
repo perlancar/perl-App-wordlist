@@ -104,6 +104,10 @@ $SPEC{wordlist} = {
                 },
             },
         },
+        lcpan => {
+            schema => 'bool',
+            summary => 'Use local CPAN mirror first when available',
+        },
         detail => {
             summary => 'Display more information when listing modules',
             schema  => 'bool',
@@ -225,7 +229,43 @@ sub wordlist {
 
     } elsif ($action eq 'list_cpan') {
 
-        [501, "Not yet implemented"];
+        my @methods = $args{lcpan} ?
+            ('lcpan', 'metacpan') : ('metacpan', 'lcpan');
+
+      METHOD:
+        for my $method (@methods) {
+            if ($method eq 'lcpan') {
+                unless (eval { require App::lcpan::Call; 1 }) {
+                    warn "App::lcpan::Call is not installed, skipped listing ".
+                        "modules from local CPAN mirror\n";
+                    next METHOD;
+                }
+                my $res = App::lcpan::Call::call_lcpan_script(
+                    argv => [qw/mods --namespace Games::Word::Wordlist
+                                --namespace Games::Word::Phraselist/],
+                );
+                return [200, "OK", [grep {/(Word|Phrase)list::/} sort @$res]];
+            } elsif ($method eq 'metacpan') {
+                unless (eval { require MetaCPAN::Client; 1 }) {
+                    warn "MetaCPAN::Client is not installed, skipped listing ".
+                        "modules from MetaCPAN\n";
+                    next METHOD;
+                }
+                my $mcpan = MetaCPAN::Client->new;
+                my $rs = $mcpan->module({
+                    either => [
+                        {'module.name'=>'Games::Word::Wordlist::*'},
+                        {'module.name'=>'Games::Word::Phraselist::*'},
+                    ]});
+                my @res;
+                while (my $row = $rs->next) {
+                    my $mod = $row->module->[0]{name};
+                    push @res, $mod unless grep {$mod eq $_} @res;
+                }
+                return [200, "OK", [sort @res]];
+            }
+        }
+        return [412, "Can't find a way to list CPAN mirrors"];
 
     } elsif ($action eq 'install') {
 
@@ -255,4 +295,3 @@ See the included script L<wordlist>.
 L<Games::Word::Wordlist>
 
 L<Games::Word::Phraselist>
-
