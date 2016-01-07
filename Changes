@@ -1,5 +1,12 @@
 Revision history for App-wordlist
 
+0.14    2016-01-08 (PERLANCAR)
+
+	- No functional changes.
+
+	- Don't show results in POD (no need, very large).
+
+
 0.13    2016-01-07 (PERLANCAR) (unreleased)
 
         - First (WordList::*-based) release. The older versions are based on
