@@ -2,4 +2,6 @@ Revision history for App-wordlist
 
 0.13    2016-01-07 (PERLANCAR) (unreleased)
 
-        - First release.
+        - First (WordList::*-based) release. The older versions are based on
+          Games::Word::Wordlist::* and is now moved to App-GamesWordlist
+          (games-wordlist).
