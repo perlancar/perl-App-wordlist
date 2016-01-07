@@ -12,33 +12,18 @@ our %SPEC;
 sub _list_installed {
     require Module::List;
     my $mods = Module::List::list_modules(
-        "Games::Word::Wordlist::",
+        "WordList::",
         {
             list_modules  => 1,
             list_pod      => 0,
             recurse       => 1,
         });
-    my $modsp = Module::List::list_modules(
-        "Games::Word::Phraselist::",
-        {
-            list_modules  => 1,
-            list_pod      => 0,
-            recurse       => 1,
-        });
-    my $res = {}; # key=name, val=full module name
-    for my $fullname (keys %$mods, keys(%$modsp)) {
-        (my $shortname = $fullname) =~ s/^Games::Word::\w+list:://;
-        if ($res->{$shortname}) {
-            ($shortname = $fullname) =~ s/^Games::Word:://;
-        }
-        $res->{$shortname} = $fullname;
-    }
-    $res;
+    [map {s/\AWordList:://; $_} sort keys %$mods];
 }
 
 $SPEC{wordlist} = {
     v => 1.1,
-    summary => 'Grep words from Games::Word::{Wordlist,Phraselist}::*',
+    summary => 'Grep words from WordList::*',
     args => {
         arg => {
             schema => ['array*' => of => 'str*'],
@@ -68,7 +53,7 @@ $SPEC{wordlist} = {
                 my %args = @_;
                 Complete::Util::complete_array_elem(
                     word  => $args{word},
-                    array => [sort keys %{ _list_installed() }],
+                    array => _list_installed(),
                     ci    => 1,
                 );
             },
@@ -79,28 +64,20 @@ $SPEC{wordlist} = {
         },
         action => {
             schema  => ['str*', in=>[
-                'list_cpan', 'list_installed', 'install', 'uninstall',
+                'list_cpan', 'list_installed',
                 'grep',
             ]],
             default => 'grep',
             cmdline_aliases => {
                 l => {
-                    summary=>'List installed Games::Word::Wordlist::* modules',
+                    summary=>'List installed WordList::* modules',
                     is_flag => 1,
                     code => sub { my $args=shift; $args->{action} = 'list_installed' },
                 },
                 L => {
-                    summary=>'List Games::Word::Wordlist::* modules on CPAN',
+                    summary=>'List WordList::* modules on CPAN',
                     is_flag => 1,
                     code => sub { my $args=shift; $args->{action} = 'list_cpan' },
-                },
-                I => {
-                    summary=>'Install Games::Word::Wordlist::* module',
-                    code => sub { my $args=shift; $args->{action} = 'install' },
-                },
-                U => {
-                    summary=>'Uninstall Games::Word::Wordlist::* module',
-                    code => sub { my $args=shift; $args->{action} = 'uninstall' },
                 },
             },
         },
@@ -165,12 +142,10 @@ sub wordlist {
         my @res;
         my $wordlists = $args{wordlist};
         if (!$wordlists || !@$wordlists) {
-            $wordlists = [sort keys %$list_installed];
+            $wordlists = $list_installed;
         }
         for my $wl (@$wordlists) {
-            my $mod = $list_installed->{$wl} or
-                return [400, "Unknown wordlist '$wl', see 'wordlist -l' ".
-                            "for list of installed wordlists"];
+            my $mod = "WordList::$wl";
             (my $modpm = $mod . ".pm") =~ s!::!/!g;
             require $modpm;
             my $obj = $mod->new;
@@ -214,11 +189,10 @@ sub wordlist {
     } elsif ($action eq 'list_installed') {
 
         my @res;
-        for (sort keys %$list_installed) {
+        for (@$list_installed) {
             if ($args{detail}) {
                 push @res, {
                     name   => $_,
-                    module => $list_installed->{$_},
                 };
             } else {
                 push @res, $_;
@@ -241,10 +215,9 @@ sub wordlist {
                     next METHOD;
                 }
                 my $res = App::lcpan::Call::call_lcpan_script(
-                    argv => [qw/mods --namespace Games::Word::Wordlist
-                                --namespace Games::Word::Phraselist/],
+                    argv => [qw/mods --namespace WordList/],
                 );
-                return [200, "OK", [grep {/(Word|Phrase)list::/} sort @$res]];
+                return [200, "OK", [grep {/WordList::/} sort @$res]];
             } elsif ($method eq 'metacpan') {
                 unless (eval { require MetaCPAN::Client; 1 }) {
                     warn "MetaCPAN::Client is not installed, skipped listing ".
@@ -253,10 +226,8 @@ sub wordlist {
                 }
                 my $mcpan = MetaCPAN::Client->new;
                 my $rs = $mcpan->module({
-                    either => [
-                        {'module.name'=>'Games::Word::Wordlist::*'},
-                        {'module.name'=>'Games::Word::Phraselist::*'},
-                    ]});
+                        'module.name'=>'WordList::*',
+                    });
                 my @res;
                 while (my $row = $rs->next) {
                     my $mod = $row->module->[0]{name};
@@ -266,14 +237,6 @@ sub wordlist {
             }
         }
         return [412, "Can't find a way to list CPAN mirrors"];
-
-    } elsif ($action eq 'install') {
-
-        [501, "Not yet implemented"];
-
-    } elsif ($action eq 'uninstall') {
-
-        [501, "Not yet implemented"];
 
     } else {
 
@@ -292,6 +255,7 @@ See the included script L<wordlist>.
 
 =head1 SEE ALSO
 
-L<Games::Word::Wordlist>
+L<App::GamesWordlist> (L<games-wordlist>) which greps from
+C<Games::Word::Wordlist::*> instead.
 
-L<Games::Word::Phraselist>
+L<WordList> and C<WordList::*> modules.
