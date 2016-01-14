@@ -1,5 +1,13 @@
 Revision history for App-wordlist
 
+0.15    2016-01-14 (PERLANCAR)
+
+        - [Bugfix] Enable utf8 output.
+
+        - Switch to Perinci::CmdLine::Inline for faster startup and less
+          dependencies.
+
+
 0.14    2016-01-08 (PERLANCAR)
 
 	- No functional changes.
