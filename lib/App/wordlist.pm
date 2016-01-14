@@ -21,6 +21,8 @@ sub _list_installed {
     [map {s/\AWordList:://; $_} sort keys %$mods];
 }
 
+my $done_binmode;
+
 $SPEC{wordlist} = {
     v => 1.1,
     summary => 'Grep words from WordList::*',
@@ -125,6 +127,8 @@ $SPEC{wordlist} = {
     'cmdline.default_format' => 'text-simple',
 };
 sub wordlist {
+    binmode(STDOUT, ":utf8") unless $done_binmode++;
+
     my %args = @_;
 
     my $action = $args{action} // 'grep';
