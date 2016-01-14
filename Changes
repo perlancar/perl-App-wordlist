@@ -1,5 +1,12 @@
 Revision history for App-wordlist
 
+0.16    2016-01-14 (PERLANCAR)
+
+        - No functional changes.
+
+        - [build] Rebuild to fix completer script.
+
+
 0.15    2016-01-14 (PERLANCAR)
 
         - [Bugfix] Enable utf8 output.
