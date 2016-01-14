@@ -121,6 +121,18 @@ $SPEC{wordlist} = {
             test => 0,
             'x.doc.show_result' => 0,
         },
+        {
+            argv => [qw/-l/],
+            summary => 'List installed wordlist modules',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/-L/],
+            summary => 'List wordlist modules available on CPAN',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
     ],
     'cmdline.default_format' => 'text-simple',
 };
