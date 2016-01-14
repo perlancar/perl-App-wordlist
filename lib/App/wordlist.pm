@@ -110,7 +110,7 @@ $SPEC{wordlist} = {
             'x.doc.show_result' => 0,
         },
         {
-            argv => [qw/-w KBBI foo/],
+            argv => [qw/-w ID::KBBI foo/],
             summary => 'Select a specific wordlist (multiple -w allowed)',
             test => 0,
             'x.doc.show_result' => 0,
