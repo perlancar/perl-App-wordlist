@@ -1,5 +1,15 @@
 Revision history for App-wordlist
 
+0.17    2016-01-15 (PERLANCAR)
+
+        - No functional changes.
+
+        - [build] Rebuild with updated Perinci::CmdLine::Inline to produce code
+          that will run on older perls [CT].
+
+        - Add/update examples.
+
+
 0.16    2016-01-14 (PERLANCAR)
 
         - No functional changes.
