@@ -137,6 +137,8 @@ $SPEC{wordlist} = {
     'cmdline.default_format' => 'text-simple',
 };
 sub wordlist {
+    require Encode;
+
     my %args = @_;
 
     my $action = $args{action} // 'grep';
@@ -146,9 +148,9 @@ sub wordlist {
     my $arg = $args{arg} // [];
 
     if ($action eq 'grep') {
-
         # convert /.../ in arg to regex
         for (@$arg) {
+            $_ = Encode::decode('UTF-8', $_);
             if (m!\A/(.*)/\z!) {
                 $_ = $ci ? qr/$1/i : qr/$1/;
             } else {
