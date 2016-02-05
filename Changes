@@ -1,5 +1,10 @@
 Revision history for App-wordlist
 
+0.19    2016-02-05 (PERLANCAR)
+
+	- [Bugfix] decode argument to utf8 to make Unicode grepping work.
+
+
 0.18    2016-01-18 (PERLANCAR)
 
         - No functional changes.
