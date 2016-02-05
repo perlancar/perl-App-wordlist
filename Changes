@@ -1,5 +1,11 @@
 Revision history for App-wordlist
 
+0.20    2016-02-06 (PERLANCAR)
+
+	- [build] Rebuild with new App-GenPericmdCompleterScript 0.08 which
+          fixes tab completion (update to Complete::Bash 0.27).
+
+
 0.19    2016-02-05 (PERLANCAR)
 
 	- [Bugfix] decode argument to utf8 to make Unicode grepping work.
