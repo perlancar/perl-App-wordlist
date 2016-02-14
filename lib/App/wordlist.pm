@@ -236,7 +236,8 @@ sub wordlist {
                 my $res = App::lcpan::Call::call_lcpan_script(
                     argv => [qw/mods --namespace WordList/],
                 );
-                return [200, "OK", [grep {/WordList::/} sort @$res]];
+                return $res if $res->[0] != 200;
+                return [200, "OK", [grep {/WordList::/} sort @{$res->[2]}]];
             } elsif ($method eq 'metacpan') {
                 unless (eval { require MetaCPAN::Client; 1 }) {
                     warn "MetaCPAN::Client is not installed, skipped listing ".
