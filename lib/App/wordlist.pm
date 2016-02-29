@@ -237,7 +237,9 @@ sub wordlist {
                     argv => [qw/mods --namespace WordList/],
                 );
                 return $res if $res->[0] != 200;
-                return [200, "OK", [grep {/WordList::/} sort @{$res->[2]}]];
+                return [200, "OK",
+                        [map {s/\AWordList:://; $_}
+                             grep {/WordList::/} sort @{$res->[2]}]];
             } elsif ($method eq 'metacpan') {
                 unless (eval { require MetaCPAN::Client; 1 }) {
                     warn "MetaCPAN::Client is not installed, skipped listing ".
@@ -251,7 +253,9 @@ sub wordlist {
                 my @res;
                 while (my $row = $rs->next) {
                     my $mod = $row->module->[0]{name};
-                    push @res, $mod unless grep {$mod eq $_} @res;
+                    next unless grep {$mod eq $_} @res;
+                    $mod =~ s/\AWordList:://;
+                    push @res, $mod;
                 }
                 return [200, "OK", [sort @res]];
             }
