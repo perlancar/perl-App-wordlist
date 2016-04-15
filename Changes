@@ -1,5 +1,10 @@
 Revision history for App-wordlist
 
+0.23    2016-04-15 (PERLANCAR)
+
+	- [Bugfix] Fix completion for --lang.
+
+
 0.22    2016-04-15 (PERLANCAR)
 
 	- Add options: --type (-t), --lang.
