@@ -1,5 +1,12 @@
 Revision history for App-wordlist
 
+0.22    2016-04-15 (PERLANCAR)
+
+	- Add options: --type (-t), --lang.
+
+	- [Bugfix] Fix logic error in doing -L which caused empty result.
+
+
 0.21    2016-02-29 (PERLANCAR)
 
 	- Strip /^WordList::/ in output of -L, like in -l.
