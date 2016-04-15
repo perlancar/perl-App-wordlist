@@ -72,7 +72,6 @@ $SPEC{wordlist} = {
         },
         wordlists => {
             'x.name.is_plural' => 1,
-            'x.name.singular' => 'wordlist',
             schema => ['array*' => of => 'str*'],
             summary => 'Select one or more wordlist modules',
             cmdline_aliases => {w=>{}},
@@ -118,8 +117,8 @@ $SPEC{wordlist} = {
             summary => 'Display more information when listing modules',
             schema  => 'bool',
         },
-        type => {
-            summary => 'Only include wordlists of certain type',
+        types => {
+            summary => 'Only include wordlists of certain type(s)',
             description => <<'_',
 
 By convention, type information is encoded in the wordlist's name. `Char` means
@@ -129,7 +128,7 @@ wordlists that are not of type `Char` and `Phrase`. `Test` means to only include
 wordlists with names matching `Test::*`.
 
 _
-            schema => ['str*', in=>['Char', 'Phrase', 'Word', 'Test']],
+            schema => ['array*', of => ['str*', in=>['Char', 'Phrase', 'Word', 'Test']]],
             description => <<'_',
 
 By convention, language information is encoded in the wordlist's name. For
@@ -139,10 +138,11 @@ example, English wordlists have names matching `EN::*` or `Word::EN::*` or
 _
             cmdline_aliases => {t=>{}},
         },
-        lang => {
-            summary => 'Only include wordlists of certain language',
-            schema => ['str*', match => '\A\w\w\z'],
-            completion => sub {
+        langs => {
+            'x.name.is_plural' => 1,
+            summary => 'Only include wordlists of certain language(s)',
+            schema => ['array*', of => ['str*', match => '\A\w\w\z']],
+            element_completion => sub {
                 my %args = @_;
                 my @langs;
                 for my $rec (@{ _list_installed() }) {
@@ -183,13 +183,13 @@ _
         },
         {
             argv => [qw/-t Phrase foo/],
-            summary => 'Select phrase wordlists',
+            summary => 'Select phrase wordlists (multiple -t allowed)',
             test => 0,
             'x.doc.show_result' => 0,
         },
         {
             argv => [qw/--lang FR foo/],
-            summary => 'Select French wordlists',
+            summary => 'Select French wordlists (multiple --lang allowed)',
             test => 0,
             'x.doc.show_result' => 0,
         },
@@ -243,11 +243,11 @@ sub wordlist {
         } else {
             $wordlists = [];
             for my $rec (@$list_installed) {
-                if ($args{type}) {
-                    next unless $rec->{type} eq $args{type};
+                if ($args{types} && @{ $args{types} }) {
+                    next unless grep { $rec->{type} eq $_ } @{$args{types}};
                 }
-                if ($args{lang}) {
-                    next unless $rec->{lang} eq uc($args{lang});
+                if ($args{langs} && @{ $args{langs} }) {
+                    next unless grep { $rec->{lang} eq uc($_) } @{$args{langs}};
                 }
                 push @$wordlists, $rec->{name};
             }
