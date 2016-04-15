@@ -145,10 +145,10 @@ _
             completion => sub {
                 my %args = @_;
                 my @langs;
-                for (@{ _list_installed() }) {
-                    next unless length $_->{lang};
-                    push @langs, $_->{lang}
-                        unless grep {$_ eq $_->{name}} @langs;
+                for my $rec (@{ _list_installed() }) {
+                    next unless length $rec->{lang};
+                    push @langs, $rec->{lang}
+                        unless grep {$_ eq $rec->{name}} @langs;
                 }
                 require Complete::Util;
                 Complete::Util::complete_array_elem(
