@@ -88,7 +88,7 @@ $SPEC{wordlist} = {
             },
         },
         or => {
-            summary => 'Use OR logic instead of the default AND',
+            summary => 'Match any word in query instead of the default "all"',
             schema  => 'bool',
         },
         action => {
