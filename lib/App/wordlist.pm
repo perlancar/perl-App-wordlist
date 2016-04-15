@@ -83,7 +83,7 @@ $SPEC{wordlist} = {
         },
         lcpan => {
             schema => 'bool',
-            summary => 'Use local CPAN mirror first when available',
+            summary => 'Use local CPAN mirror first when available (for -L)',
         },
         detail => {
             summary => 'Display more information when listing modules',
@@ -253,10 +253,11 @@ sub wordlist {
                 my @res;
                 while (my $row = $rs->next) {
                     my $mod = $row->module->[0]{name};
-                    next unless grep {$mod eq $_} @res;
+                    say "D: mod=$mod" if $ENV{DEBUG};
                     $mod =~ s/\AWordList:://;
-                    push @res, $mod;
+                    push @res, $mod unless grep {$mod eq $_} @res;
                 }
+                warn "Empty result from MetaCPAN\n" unless @res;
                 return [200, "OK", [sort @res]];
             }
         }
@@ -275,6 +276,11 @@ sub wordlist {
 =head1 SYNOPSIS
 
 See the included script L<wordlist>.
+
+
+=head1 ENVIRONMENT
+
+=head2 DEBUG => bool
 
 
 =head1 SEE ALSO
