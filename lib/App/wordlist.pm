@@ -18,7 +18,34 @@ sub _list_installed {
             list_pod      => 0,
             recurse       => 1,
         });
-    [map {s/\AWordList:://; $_} sort keys %$mods];
+    my @res;
+    for my $wl0 (sort keys %$mods) {
+        $wl0 =~ s/\AWordList:://;
+        my $wl = $wl0;
+
+        my $type;
+        if ($wl =~ s/^Char:://) {
+            $type = 'Char';
+        } elsif ($wl =~ s/^Phrase:://) {
+            $type = 'Phrase';
+        } elsif ($wl =~ s/^Test:://) {
+            $type = 'Test';
+        } else {
+            $type = 'Word';
+        }
+
+        my $lang = '';
+        if ($wl =~ /^(\w\w)::/) {
+            $lang = $1;
+        }
+
+        push @res, {
+            name => $wl0,
+            lang => $lang,
+            type => $type,
+        };
+     }
+    \@res;
 }
 
 $SPEC{wordlist} = {
@@ -43,7 +70,9 @@ $SPEC{wordlist} = {
         max_len => {
             schema  => 'int*',
         },
-        wordlist => {
+        wordlists => {
+            'x.name.is_plural' => 1,
+            'x.name.singular' => 'wordlist',
             schema => ['array*' => of => 'str*'],
             summary => 'Select one or more wordlist modules',
             cmdline_aliases => {w=>{}},
@@ -53,7 +82,7 @@ $SPEC{wordlist} = {
                 my %args = @_;
                 Complete::Util::complete_array_elem(
                     word  => $args{word},
-                    array => _list_installed(),
+                    array => [map {$_->{name}} @{ _list_installed() }],
                     ci    => 1,
                 );
             },
@@ -89,6 +118,43 @@ $SPEC{wordlist} = {
             summary => 'Display more information when listing modules',
             schema  => 'bool',
         },
+        type => {
+            summary => 'Only include wordlists of certain type',
+            description => <<'_',
+
+By convention, type information is encoded in the wordlist's name. `Char` means
+to only include wordlists with names matching `Char::*`. `Phrase` means to only
+include wordlists with names matching `Phrase::*`. `Word` means to only include
+wordlists that are not of type `Char` and `Phrase`. `Test` means to only include
+wordlists with names matching `Test::*`.
+
+_
+            schema => ['str*', in=>['Char', 'Phrase', 'Word', 'Test']],
+            description => <<'_',
+
+By convention, language information is encoded in the wordlist's name. For
+example, English wordlists have names matching `EN::*` or `Word::EN::*` or
+`Char::EN::*` or `Phrase::EN::*`.
+
+_
+            cmdline_aliases => {t=>{}},
+        },
+        lang => {
+            summary => 'Only include wordlists of certain language',
+            schema => ['str*', match => '\A\w\w\z'],
+            completion => sub {
+                my %args = @_;
+                my @langs;
+                for (@{ _list_installed() }) {
+                    next unless length $_->{lang};
+                    push @langs, $_->{lang}
+                        unless grep {$_ eq $_->{name}} @langs;
+                }
+                require Complete::Util;
+                Complete::Util::complete_array_elem(
+                    word => $args{word}, array => \@langs);
+            },
+        },
     },
     examples => [
         {
@@ -112,6 +178,18 @@ $SPEC{wordlist} = {
         {
             argv => [qw/-w ID::KBBI foo/],
             summary => 'Select a specific wordlist (multiple -w allowed)',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/-t Phrase foo/],
+            summary => 'Select phrase wordlists',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/--lang FR foo/],
+            summary => 'Select French wordlists',
             test => 0,
             'x.doc.show_result' => 0,
         },
@@ -159,9 +237,20 @@ sub wordlist {
         }
 
         my @res;
-        my $wordlists = $args{wordlist};
-        if (!$wordlists || !@$wordlists) {
-            $wordlists = $list_installed;
+        my $wordlists;
+        if ($args{wordlists}) {
+            $wordlists = $args{wordlists};
+        } else {
+            $wordlists = [];
+            for my $rec (@$list_installed) {
+                if ($args{type}) {
+                    next unless $rec->{type} eq $args{type};
+                }
+                if ($args{lang}) {
+                    next unless $rec->{lang} eq uc($args{lang});
+                }
+                push @$wordlists, $rec->{name};
+            }
         }
         for my $wl (@$wordlists) {
             my $mod = "WordList::$wl";
@@ -210,11 +299,9 @@ sub wordlist {
         my @res;
         for (@$list_installed) {
             if ($args{detail}) {
-                push @res, {
-                    name   => $_,
-                };
-            } else {
                 push @res, $_;
+            } else {
+                push @res, $_->{name};
             }
         }
         [200, "OK", \@res,
