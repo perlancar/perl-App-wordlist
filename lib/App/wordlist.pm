@@ -114,7 +114,15 @@ $SPEC{wordlist} = {
             summary => 'Use local CPAN mirror first when available (for -L)',
         },
         detail => {
-            summary => 'Display more information when listing modules',
+            summary => 'Display more information when listing modules/result',
+            description => <<'_',
+
+When listing installed modules (`-l`), this means also returning a wordlist's
+type and language.
+
+When returning grep result, this means also returning wordlist name.
+
+_
             schema  => 'bool',
         },
         types => {
@@ -224,6 +232,7 @@ sub wordlist {
     my $ci = $args{ignore_case} // 1;
     my $or = $args{or};
     my $arg = $args{arg} // [];
+    my $detail = $args{detail};
 
     if ($action eq 'grep') {
         # convert /.../ in arg to regex
@@ -276,7 +285,7 @@ sub wordlist {
                         if ($or) {
                             # succeed early when --or
                             if ($match) {
-                                push @res, $word;
+                                push @res, $detail ? [$wl, $word] : $word;
                                 return;
                             }
                         } else {
@@ -287,7 +296,7 @@ sub wordlist {
                         }
                     }
                     if (!$or || !@$arg) {
-                        push @res, $word;
+                        push @res, $detail ? [$wl, $word] : $word;
                     }
                 }
             );
@@ -298,14 +307,14 @@ sub wordlist {
 
         my @res;
         for (@$list_installed) {
-            if ($args{detail}) {
+            if ($detail) {
                 push @res, $_;
             } else {
                 push @res, $_->{name};
             }
         }
         [200, "OK", \@res,
-         {('cmdline.default_format' => 'text') x !!$args{detail}}];
+         {('cmdline.default_format' => 'text') x !!$detail}];
 
     } elsif ($action eq 'list_cpan') {
 
