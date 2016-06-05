@@ -24,7 +24,9 @@ sub _list_installed {
         my $wl = $wl0;
 
         my $type;
-        if ($wl =~ s/^Char:://) {
+        if ($wl =~ s/^Base:://) {
+            $type = 'Base';
+        } elsif ($wl =~ s/^Char:://) {
             $type = 'Char';
         } elsif ($wl =~ s/^Phrase:://) {
             $type = 'Phrase';
@@ -136,7 +138,7 @@ wordlists that are not of type `Char` and `Phrase`. `Test` means to only include
 wordlists with names matching `Test::*`.
 
 _
-            schema => ['array*', of => ['str*', in=>['Char', 'Phrase', 'Word', 'Test']]],
+            schema => ['array*', of => ['str*', in=>['Base', 'Char', 'Phrase', 'Word', 'Test']]],
             description => <<'_',
 
 By convention, language information is encoded in the wordlist's name. For
