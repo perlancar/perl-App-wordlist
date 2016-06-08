@@ -24,7 +24,10 @@ sub _list_installed {
         my $wl = $wl0;
 
         my $type;
-        if ($wl =~ s/^Base:://) {
+        if ($wl =~ /^(Base|MetaSyntactic)\z/) {
+            # just a base class
+            next;
+        } elsif ($wl =~ s/^Base:://) {
             $type = 'Base';
         } elsif ($wl =~ s/^MetaSyntactic:://) {
             $type = 'MetaSyntactic';
