@@ -1,5 +1,13 @@
 Revision history for App-wordlist
 
+0.25    2016-09-26 (PERLANCAR)
+
+        - Exclude WordList::Base::* and WordList::MetaSyntactic because they are
+          only base classes and not real wordlists.
+
+        - [doc] Add example demonstrating --detail.
+
+
 0.24    2016-04-15 (PERLANCAR)
 
 	- Makes --detail also cause grep result to contain wordlist name.
