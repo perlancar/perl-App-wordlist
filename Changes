@@ -1,3 +1,8 @@
+0.260   2017-11-07 (PERLANCAR)
+
+	- Add options --num (-n) & --random (-r).
+
+
 0.25    2016-09-26 (PERLANCAR)
 
         - Exclude WordList::Base::* and WordList::MetaSyntactic because they are

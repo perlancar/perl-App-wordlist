@@ -387,7 +387,7 @@ sub wordlist {
                 );
                 return $res if $res->[0] != 200;
                 return [200, "OK",
-                        [map {s/\AWordList:://; $_}
+                        [map {my $w = $_; $w =~ s/\AWordList:://; $w }
                              grep {/WordList::/} sort @{$res->[2]}]];
             } elsif ($method eq 'metacpan') {
                 unless (eval { require MetaCPAN::Client; 1 }) {
