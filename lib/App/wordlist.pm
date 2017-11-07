@@ -77,6 +77,12 @@ $SPEC{wordlist} = {
         max_len => {
             schema  => 'int*',
         },
+        num => {
+            summary => 'Return (at most) this number of words (0 = unlimited)',
+            schema  => ['int*', min=>0],
+            default => 0,
+            cmdline_aliases => {n=>{}},
+        },
         wordlists => {
             'x.name.is_plural' => 1,
             schema => ['array*' => of => 'str*'],
@@ -246,6 +252,7 @@ sub wordlist {
     my $or = $args{or};
     my $arg = $args{arg} // [];
     my $detail = $args{detail};
+    my $num = $args{num} // 0;
 
     if ($action eq 'grep') {
         # convert /.../ in arg to regex
@@ -274,6 +281,7 @@ sub wordlist {
                 push @$wordlists, $rec->{name};
             }
         }
+        my $n = 0;
         for my $wl (@$wordlists) {
             my $mod = "WordList::$wl";
             (my $modpm = $mod . ".pm") =~ s!::!/!g;
@@ -283,6 +291,7 @@ sub wordlist {
                 sub {
                     my $word = shift;
 
+                    return if $num > 0 && $n >= $num;
                     return if defined($args{len}) &&
                         length($word) != $args{len};
                     return if defined($args{min_len}) &&
@@ -299,6 +308,7 @@ sub wordlist {
                             # succeed early when --or
                             if ($match) {
                                 push @res, $detail ? [$wl, $word] : $word;
+                                $n++;
                                 return;
                             }
                         } else {
@@ -310,6 +320,7 @@ sub wordlist {
                     }
                     if (!$or || !@$arg) {
                         push @res, $detail ? [$wl, $word] : $word;
+                        $n++;
                     }
                 }
             );
