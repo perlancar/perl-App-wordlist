@@ -7,6 +7,8 @@ use 5.010001;
 use strict;
 use warnings;
 
+use List::Util qw(shuffle);
+
 our %SPEC;
 
 sub _list_installed {
@@ -79,9 +81,14 @@ $SPEC{wordlist} = {
         },
         num => {
             summary => 'Return (at most) this number of words (0 = unlimited)',
-            schema  => ['int*', min=>0],
+            schema  => ['int*', min=>0, max=>9999],
             default => 0,
             cmdline_aliases => {n=>{}},
+        },
+        random => {
+            summary => 'Pick random words (must set --num to positive number)',
+            schema  => 'bool*',
+            cmdline_aliases => {r=>{}},
         },
         wordlists => {
             'x.name.is_plural' => 1,
@@ -253,6 +260,10 @@ sub wordlist {
     my $arg = $args{arg} // [];
     my $detail = $args{detail};
     my $num = $args{num} // 0;
+    my $random = $args{random};
+
+    return [412, "Must set --num to positive number when --random"]
+        if $random && !$num;
 
     if ($action eq 'grep') {
         # convert /.../ in arg to regex
@@ -281,7 +292,25 @@ sub wordlist {
                 push @$wordlists, $rec->{name};
             }
         }
+        $wordlists = [shuffle @$wordlists] if $random;
+
         my $n = 0;
+
+        my $code_add_word = sub {
+            my ($wl, $word) = @_;
+            if ($random) {
+                if (@res < $num) {
+                    splice @res, rand(@res+1), 0,
+                        $detail ? [$wl, $word] : $word;
+                } else {
+                    rand($n) < @res and splice @res, rand(@res), 1,
+                        $detail ? [$wl, $word] : $word;
+                }
+            } else {
+                push @res, $detail ? [$wl, $word] : $word;
+            }
+        };
+
         for my $wl (@$wordlists) {
             my $mod = "WordList::$wl";
             (my $modpm = $mod . ".pm") =~ s!::!/!g;
@@ -291,7 +320,7 @@ sub wordlist {
                 sub {
                     my $word = shift;
 
-                    return if $num > 0 && $n >= $num;
+                    return if !$random && $num > 0 && $n >= $num;
                     return if defined($args{len}) &&
                         length($word) != $args{len};
                     return if defined($args{min_len}) &&
@@ -307,8 +336,8 @@ sub wordlist {
                         if ($or) {
                             # succeed early when --or
                             if ($match) {
-                                push @res, $detail ? [$wl, $word] : $word;
                                 $n++;
+                                $code_add_word->($wl, $word);
                                 return;
                             }
                         } else {
@@ -319,8 +348,8 @@ sub wordlist {
                         }
                     }
                     if (!$or || !@$arg) {
-                        push @res, $detail ? [$wl, $word] : $word;
                         $n++;
+                        $code_add_word->($wl, $word);
                     }
                 }
             );
@@ -378,7 +407,7 @@ sub wordlist {
                     push @res, $mod unless grep {$mod eq $_} @res;
                 }
                 warn "Empty result from MetaCPAN\n" unless @res;
-                return [200, "OK", [sort @res]];
+                return [200, "OK", [$random ? shuffle(@res) : sort(@res)]];
             }
         }
         return [412, "Can't find a way to list CPAN mirrors"];
