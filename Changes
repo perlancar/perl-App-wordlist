@@ -1,3 +1,10 @@
+0.261   2017-11-08 (PERLANCAR)
+
+	- No functional changes.
+
+	- Make %arg_wordlists accessible from other packages.
+
+
 0.260   2017-11-07 (PERLANCAR)
 
 	- Add options --num (-n) & --random (-r).
