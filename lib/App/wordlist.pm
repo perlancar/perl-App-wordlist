@@ -11,6 +11,25 @@ use List::Util qw(shuffle);
 
 our %SPEC;
 
+our %arg_wordlists = (
+    wordlists => {
+        'x.name.is_plural' => 1,
+        schema => ['array*' => of => 'str*'],
+        summary => 'Select one or more wordlist modules',
+        cmdline_aliases => {w=>{}},
+        element_completion => sub {
+            require Complete::Util;
+
+            my %args = @_;
+            Complete::Util::complete_array_elem(
+                word  => $args{word},
+                array => [map {$_->{name}} @{ _list_installed() }],
+                ci    => 1,
+            );
+        },
+    },
+);
+
 sub _list_installed {
     require Module::List;
     my $mods = Module::List::list_modules(
@@ -90,22 +109,7 @@ $SPEC{wordlist} = {
             schema  => 'bool*',
             cmdline_aliases => {r=>{}},
         },
-        wordlists => {
-            'x.name.is_plural' => 1,
-            schema => ['array*' => of => 'str*'],
-            summary => 'Select one or more wordlist modules',
-            cmdline_aliases => {w=>{}},
-            element_completion => sub {
-                require Complete::Util;
-
-                my %args = @_;
-                Complete::Util::complete_array_elem(
-                    word  => $args{word},
-                    array => [map {$_->{name}} @{ _list_installed() }],
-                    ci    => 1,
-                );
-            },
-        },
+        %arg_wordlists,
         or => {
             summary => 'Match any word in query instead of the default "all"',
             schema  => 'bool',
