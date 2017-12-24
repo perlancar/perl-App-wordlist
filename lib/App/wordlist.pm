@@ -30,6 +30,11 @@ our %arg_wordlists = (
     },
 );
 
+sub _length_in_graphemes {
+    my $length = () = $_[0] =~ m/\X/g;
+    return $length;
+}
+
 sub _list_installed {
     require Module::List;
     my $mods = Module::List::list_modules(
@@ -326,11 +331,11 @@ sub wordlist {
 
                     return if !$random && $num > 0 && $n >= $num;
                     return if defined($args{len}) &&
-                        length($word) != $args{len};
+                        _length_in_graphemes($word) != $args{len};
                     return if defined($args{min_len}) &&
-                        length($word) < $args{min_len};
+                        _length_in_graphemes($word) < $args{min_len};
                     return if defined($args{max_len}) &&
-                        length($word) > $args{max_len};
+                        _length_in_graphemes($word) > $args{max_len};
 
                     my $cmpword = $ci ? lc($word) : $word;
                     for (@$arg) {
