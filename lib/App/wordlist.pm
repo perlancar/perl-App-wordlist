@@ -192,6 +192,11 @@ _
                     word => $args{word}, array => \@langs);
             },
         },
+        color => {
+            summary => 'When to highlight search string/matching pattern with color',
+            schema => ['str*', in=>['never', 'always', 'auto']],
+            default => 'auto',
+        },
     },
     examples => [
         {
@@ -270,6 +275,10 @@ sub wordlist {
     my $detail = $args{detail};
     my $num = $args{num} // 0;
     my $random = $args{random};
+    my $color = $args{color} // 'auto';
+
+    my $use_color = ($color eq 'always' ? 1 : $color eq 'never' ? 0 : undef)
+        // $ENV{COLOR} // (-t STDOUT);
 
     return [412, "Must set --num to positive number when --random"]
         if $random && !$num;
@@ -306,7 +315,19 @@ sub wordlist {
         my $n = 0;
 
         my $code_add_word = sub {
-            my ($wl, $word) = @_;
+            my ($wl, $word, $highlight_str, $ci) = @_;
+            #use DD; dd \@_;
+            if (defined $highlight_str) {
+                if (ref $highlight_str eq 'Regexp') {
+                    $word =~ s/($highlight_str)/\e[1;31m$1\e[0m/g;
+                } else {
+                    if ($ci) {
+                        $word =~ s/(\Q$highlight_str\E)/\e[1;31m$1\e[0m/gi;
+                    } else {
+                        $word =~ s/(\Q$highlight_str\E)/\e[1;31m$1\e[0m/g;
+                    }
+                }
+            }
             if ($random) {
                 if (@res < $num) {
                     splice @res, rand(@res+1), 0,
@@ -338,6 +359,7 @@ sub wordlist {
                         _length_in_graphemes($word) > $args{max_len};
 
                     my $cmpword = $ci ? lc($word) : $word;
+                    my $match_arg;
                     for (@$arg) {
                         my $match =
                             ref($_) eq 'Regexp' ? $cmpword =~ $_ :
@@ -346,7 +368,8 @@ sub wordlist {
                             # succeed early when --or
                             if ($match) {
                                 $n++;
-                                $code_add_word->($wl, $word);
+                                $code_add_word->($wl, $word,
+                                                 $use_color ? $_ : undef, $ci);
                                 return;
                             }
                         } else {
@@ -355,10 +378,12 @@ sub wordlist {
                                 return;
                             }
                         }
+                        $match_arg = $_;
                     }
                     if (!$or || !@$arg) {
                         $n++;
-                        $code_add_word->($wl, $word);
+                        $code_add_word->($wl, $word,
+                                         $use_color ? $match_arg : undef, $ci);
                     }
                 }
             );
@@ -439,6 +464,10 @@ See the included script L<wordlist>.
 =head1 ENVIRONMENT
 
 =head2 DEBUG => bool
+
+=head2 COLOR => bool
+
+Set color on/off when --color=auto (the default).
 
 
 =head1 SEE ALSO
