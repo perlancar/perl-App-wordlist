@@ -37,23 +37,16 @@ sub _length_in_graphemes {
 
 sub _list_installed {
     require Module::List;
-    my $mods1 = Module::List::list_modules(
+    my $mods = Module::List::list_modules(
         "WordList::",
         {
             list_modules  => 1,
             list_pod      => 0,
             recurse       => 1,
         });
-    my $mods2 = Module::List::list_modules(
-        "WordListC::",
-        {
-            list_modules  => 1,
-            list_pod      => 0,
-            recurse       => 1,
-        });
     my @res;
-    for my $wl0 ((sort keys %$mods1), (sort keys %$mods2)) {
-        (my $wl = $wl0) =~ s/\AWordListC?:://;
+    for my $wl0 (sort keys %$mods) {
+        (my $wl = $wl0) =~ s/\AWordList:://;
 
         my $type;
         if ($wl =~ /^(Base|MetaSyntactic)\z/) {
@@ -356,9 +349,6 @@ sub wordlist {
                 $mod = "WordList::$wl";
                 ($modpm = $mod . ".pm") =~ s!::!/!g;
                 last if eval { require $modpm; 1 };
-                $mod = "WordListC::$wl";
-                ($modpm = $mod . ".pm") =~ s!::!/!g;
-                last if eval { require $modpm; 1 };
                 die;
             }
             my $obj = $mod->new;
@@ -492,5 +482,3 @@ L<App::GamesWordlist> (L<games-wordlist>) which greps from
 C<Games::Word::Wordlist::*> instead.
 
 L<WordList> and C<WordList::*> modules.
-
-L<WordListC> and C<WordListC::*> modules.
