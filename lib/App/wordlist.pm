@@ -8,6 +8,7 @@ use strict;
 use warnings;
 
 use List::Util qw(shuffle);
+use WordList::Namespace qw(is_actual_wordlist_module);
 
 our %SPEC;
 
@@ -46,14 +47,13 @@ sub _list_installed {
         });
     my @res;
     for my $wl0 (sort keys %$mods) {
+        next unless is_actual_wordlist_module($wl0);
         (my $wl = $wl0) =~ s/\AWordList:://;
 
         my $type;
         if ($wl =~ /^(Base|MetaSyntactic)\z/) {
             # just a base class
             next;
-        } elsif ($wl =~ s/^Base:://) {
-            $type = 'Base';
         } elsif ($wl =~ s/^MetaSyntactic:://) {
             $type = 'MetaSyntactic';
         } elsif ($wl =~ s/^Char:://) {
