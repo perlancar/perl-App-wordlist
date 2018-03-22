@@ -1,3 +1,8 @@
+0.266   2018-03-22 (PERLANCAR)
+
+	- Use WordList::Namespace.
+
+
 0.265   2018-03-19 (PERLANCAR)
 
 	- Remove support for WordListC::* modules (WordListC was an
