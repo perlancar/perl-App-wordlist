@@ -51,10 +51,7 @@ sub _list_installed {
         (my $wl = $wl0) =~ s/\AWordList:://;
 
         my $type;
-        if ($wl =~ /^(Base|MetaSyntactic)\z/) {
-            # just a base class
-            next;
-        } elsif ($wl =~ s/^MetaSyntactic:://) {
+        if ($wl =~ s/^MetaSyntactic:://) {
             $type = 'MetaSyntactic';
         } elsif ($wl =~ s/^Char:://) {
             $type = 'Char';
