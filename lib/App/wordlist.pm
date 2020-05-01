@@ -1,6 +1,8 @@
 package App::wordlist;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -8,7 +10,6 @@ use strict;
 use warnings;
 
 use List::Util qw(shuffle);
-use WordList::Namespace qw(is_actual_wordlist_module);
 
 our %SPEC;
 
@@ -47,23 +48,7 @@ sub _list_installed {
         });
     my @res;
     for my $wl0 (sort keys %$mods) {
-        next unless is_actual_wordlist_module($wl0);
         (my $wl = $wl0) =~ s/\AWordList:://;
-
-        my $type;
-        if ($wl =~ s/^MetaSyntactic:://) {
-            $type = 'MetaSyntactic';
-        } elsif ($wl =~ s/^Char:://) {
-            $type = 'Char';
-        } elsif ($wl =~ s/^Phrase:://) {
-            $type = 'Phrase';
-        } elsif ($wl =~ s/^Password:://) {
-            $type = 'Password';
-        } elsif ($wl =~ s/^Test:://) {
-            $type = 'Test';
-        } else {
-            $type = 'Word';
-        }
 
         my $lang = '';
         if ($wl =~ /^(\w\w)::/) {
@@ -73,7 +58,6 @@ sub _list_installed {
         push @res, {
             name => $wl,
             lang => $lang,
-            type => $type,
         };
      }
     \@res;
@@ -145,37 +129,24 @@ $SPEC{wordlist} = {
             description => <<'_',
 
 When listing installed modules (`-l`), this means also returning a wordlist's
-type and language.
+language.
 
 When returning grep result, this means also returning wordlist name.
 
 _
             schema  => 'bool',
         },
-        types => {
-            summary => 'Only include wordlists of certain type(s)',
-            description => <<'_',
-
-By convention, type information is encoded in the wordlist's name. `Char` means
-to only include wordlists with names matching `Char::*`. `Phrase` means to only
-include wordlists with names matching `Phrase::*`. `Word` means to only include
-wordlists that are not of type `Char` and `Phrase`. `Test` means to only include
-wordlists with names matching `Test::*`.
-
-_
-            schema => ['array*', of => ['str*', in=>['Base', 'MetaSyntactic', 'Char', 'Phrase', 'Word', 'Test']]],
-            description => <<'_',
-
-By convention, language information is encoded in the wordlist's name. For
-example, English wordlists have names matching `EN::*` or `Word::EN::*` or
-`Char::EN::*` or `Phrase::EN::*`.
-
-_
-            cmdline_aliases => {t=>{}},
-        },
         langs => {
             'x.name.is_plural' => 1,
             summary => 'Only include wordlists of certain language(s)',
+            description => <<'_',
+
+By convention, language code is the first subnamespace of a wordlist module,
+e.g. WordList::EN::* for English, WordList::FR::* for French, and so on.
+Wordlist modules which do not follow this convention (e.g. WordList::Password::*
+or WordList::PersonName::*) are not included.
+
+_
             schema => ['array*', of => ['str*', match => '\A\w\w\z']],
             element_completion => sub {
                 my %args = @_;
@@ -227,12 +198,12 @@ _
             test => 0,
             'x.doc.show_result' => 0,
         },
-        {
-            argv => [qw/-t Phrase foo/],
-            summary => 'Select phrase wordlists (multiple -t allowed)',
-            test => 0,
-            'x.doc.show_result' => 0,
-        },
+        #{
+        #    argv => [qw/-t Phrase foo/],
+        #    summary => 'Select phrase wordlists (multiple -t allowed)',
+        #    test => 0,
+        #    'x.doc.show_result' => 0,
+        #},
         {
             argv => [qw/--lang FR foo/],
             summary => 'Select French wordlists (multiple --lang allowed)',
@@ -299,9 +270,6 @@ sub wordlist {
         } else {
             $wordlists = [];
             for my $rec (@$list_installed) {
-                if ($args{types} && @{ $args{types} }) {
-                    next unless grep { $rec->{type} eq $_ } @{$args{types}};
-                }
                 if ($args{langs} && @{ $args{langs} }) {
                     next unless grep { $rec->{lang} eq uc($_) } @{$args{langs}};
                 }
