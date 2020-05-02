@@ -270,7 +270,7 @@ sub wordlist {
 
         my $n = 0;
 
-        my $code_add_word = sub {
+        my $code_format_word = sub {
             my ($wl, $word, $highlight_str, $ci) = @_;
             #use DD; dd \@_;
             if (defined $highlight_str) {
@@ -284,62 +284,70 @@ sub wordlist {
                     }
                 }
             }
-            push @res, $detail ? [$wl, $word] : $word;
+            $detail ? [$wl, $word] : $word;
         };
 
-        for my $wl (@$wordlists) {
-            my $mod;
-            {
-                my $modpm;
-                $mod = "WordList::$wl";
-                ($modpm = $mod . ".pm") =~ s!::!/!g;
-                last if eval { require $modpm; 1 };
-                die;
+        my $i_wordlist = 0;
+        my $wl_obj;
+        my $code_return_word = sub {
+          REDO:
+            return if $i_wordlist >= @$wordlists;
+            my $wl = $wordlists->[$i_wordlist];
+            unless ($wl_obj) {
+                my $mod = "WordList::$wl";
+                (my $modpm = "$mod.pm") =~ s!::!/!g;
+                eval { require $modpm; 1 };
+                if ($@) {
+                    warn;
+                    $i_wordlist++;
+                    goto REDO;
+                }
+                $wl_obj = $mod->new;
+                $wl_obj->reset_iterator;
             }
-            my $obj = $mod->new;
-            $obj->each_word(
-                sub {
-                    my $word = shift;
+            my $word = $wl_obj->next_word;
+            unless (defined $word) {
+                undef $wl_obj;
+                $i_wordlist++;
+                goto REDO;
+            }
 
-                    return if $num > 0 && $n >= $num;
-                    return if defined($args{len}) &&
-                        _length_in_graphemes($word) != $args{len};
-                    return if defined($args{min_len}) &&
-                        _length_in_graphemes($word) < $args{min_len};
-                    return if defined($args{max_len}) &&
-                        _length_in_graphemes($word) > $args{max_len};
+            goto REDO if $num > 0 && $n >= $num;
+            goto REDO if defined($args{len}) &&
+                _length_in_graphemes($word) != $args{len};
+            goto REDO if defined($args{min_len}) &&
+                _length_in_graphemes($word) < $args{min_len};
+            goto REDO if defined($args{max_len}) &&
+                _length_in_graphemes($word) > $args{max_len};
 
-                    my $cmpword = $ci ? lc($word) : $word;
-                    my $match_arg;
-                    for (@$arg) {
-                        my $match =
-                            ref($_) eq 'Regexp' ? $cmpword =~ $_ :
-                                index($cmpword, $_) >= 0;
-                        if ($or) {
-                            # succeed early when --or
-                            if ($match) {
-                                $n++;
-                                $code_add_word->($wl, $word,
-                                                 $use_color ? $_ : undef, $ci);
-                                return;
-                            }
-                        } else {
-                            # fail early when and (the default)
-                            if (!$match) {
-                                return;
-                            }
-                        }
-                        $match_arg = $_;
-                    }
-                    if (!$or || !@$arg) {
+            my $cmpword = $ci ? lc($word) : $word;
+            my $match_arg;
+            for (@$arg) {
+                my $match =
+                    ref($_) eq 'Regexp' ? $cmpword =~ $_ :
+                    index($cmpword, $_) >= 0;
+                if ($or) {
+                    # succeed early when --or
+                    if ($match) {
                         $n++;
-                        $code_add_word->($wl, $word,
-                                         $use_color ? $match_arg : undef, $ci);
+                        return $code_format_word->(
+                            $wl, $word, $use_color ? $_ : undef, $ci);
+                    }
+                } else {
+                    # fail early when and (the default)
+                    if (!$match) {
+                        goto REDO;
                     }
                 }
-            );
-        }
-        [200, "OK", \@res];
+                $match_arg = $_;
+            }
+            if (!$or || !@$arg) {
+                $n++;
+                return $code_format_word->(
+                    $wl, $word, $use_color ? $match_arg : undef, $ci);
+            }
+        };
+        [200, "OK", $code_return_word, {stream=>1}];
 
     } elsif ($action eq 'list_installed') {
 
