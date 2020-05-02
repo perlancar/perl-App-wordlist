@@ -296,13 +296,12 @@ sub wordlist {
             unless ($wl_obj) {
                 my $mod = "WordList::$wl";
                 (my $modpm = "$mod.pm") =~ s!::!/!g;
-                eval { require $modpm; 1 };
+                eval { require $modpm; $wl_obj = $mod->new };
                 if ($@) {
                     warn;
                     $i_wordlist++;
                     goto REDO;
                 }
-                $wl_obj = $mod->new;
                 $wl_obj->reset_iterator;
             }
             my $word = $wl_obj->next_word;
