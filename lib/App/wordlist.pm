@@ -45,6 +45,7 @@ sub _list_installed {
             list_modules  => 1,
             list_pod      => 0,
             recurse       => 1,
+            return_path   => 1,
         });
     my @res;
     for my $wl0 (sort keys %$mods) {
@@ -58,6 +59,7 @@ sub _list_installed {
         push @res, {
             name => $wl,
             lang => $lang,
+            path => $mods->{$wl0}{module_path},
         };
      }
     \@res;
