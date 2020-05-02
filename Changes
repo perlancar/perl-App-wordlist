@@ -1,3 +1,16 @@
+0.268   2020-05-02  Released-By: PERLANCAR; Urgency: medium
+
+	- CLI now streams output; output starts immediately.
+
+        - Do not stop when a WordList::* module cannot be loaded; print error
+          message but continue.
+
+	- [removed] Remove option --random (-r) to ease transition to
+	  streaming output.
+
+	- wordlist -l --detail now also shows module path.
+
+
 0.267   2020-05-01  Released-By: PERLANCAR; Urgency: medium
 
 	- Remove --type (-t) option; remove the use of deprecated
