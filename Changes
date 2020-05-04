@@ -10,7 +10,7 @@
         - Do not stop when a WordList::* module cannot be loaded; print error
           message but continue.
 
-	- [removed] Remove option --random (-r) to ease transition to
+	- [removed] Remove option --random (-r) because it is incompatible with
 	  streaming output.
 
 	- wordlist -l --detail now also shows module path.
