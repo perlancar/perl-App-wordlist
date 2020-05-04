@@ -1,3 +1,8 @@
+0.269   2020-05-04  Released-By: PERLANCAR; Urgency: medium
+
+	- Enable logging in CLI.
+
+
 0.268   2020-05-02  Released-By: PERLANCAR; Urgency: medium
 
 	- CLI now streams output; output starts immediately.
