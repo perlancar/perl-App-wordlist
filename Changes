@@ -19,7 +19,8 @@
           message but continue.
 
 	- [removed] Remove option --random (-r) because it is incompatible with
-	  streaming output.
+	  streaming output. UPDATE 2020-05-18: this option has been re-added in
+	  0.270.
 
 	- wordlist -l --detail now also shows module path.
 
