@@ -8,6 +8,7 @@ package App::wordlist;
 use 5.010001;
 use strict;
 use warnings;
+use Log::ger;
 
 use List::Util qw(shuffle);
 
@@ -287,6 +288,7 @@ sub wordlist {
             }
         }
         $wordlists = [shuffle @$wordlists] if $random;
+        log_trace "Wordlists to use: %s", $wordlists;
 
         my $n = 0;
 
@@ -316,6 +318,7 @@ sub wordlist {
             unless ($wl_obj) {
                 my $mod = "WordList::$wl";
                 (my $modpm = "$mod.pm") =~ s!::!/!g;
+                log_trace "Loading wordlist module $mod ...";
                 eval { require $modpm; $wl_obj = $mod->new };
                 if ($@) {
                     warn;
