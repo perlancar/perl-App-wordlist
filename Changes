@@ -1,3 +1,10 @@
+0.271   2020-05-21  Released-By: PERLANCAR; Urgency: medium
+
+	- [ux] Allow specifying wildcard in -w, e.g. -w EN::* or -w EN::**.
+
+	- Add a couple of logging statements.
+
+
 0.270   2020-05-18  Released-By: PERLANCAR; Urgency: medium
 
 	- Re-add --random (-r) option; note that specifying this option
