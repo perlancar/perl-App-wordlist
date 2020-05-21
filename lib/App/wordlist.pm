@@ -16,7 +16,10 @@ our %SPEC;
 our %arg_wordlists = (
     wordlists => {
         'x.name.is_plural' => 1,
-        schema => ['array*' => of => 'str*'],
+        schema => ['array*' => {
+            of => 'str*', # for the moment we need to use 'str' instead of 'perl::modname' due to Perinci::Sub::GetArgs::Argv limitation
+            'x.perl.coerce_rules'=>[ ['From_str_or_array::expand_perl_modname_wildcard'=>{ns_prefix=>"WordList"}] ],
+        }],
         summary => 'Select one or more wordlist modules',
         cmdline_aliases => {w=>{}},
         element_completion => sub {
@@ -207,12 +210,13 @@ _
             test => 0,
             'x.doc.show_result' => 0,
         },
-        #{
-        #    argv => [qw/-t Phrase foo/],
-        #    summary => 'Select phrase wordlists (multiple -t allowed)',
-        #    test => 0,
-        #    'x.doc.show_result' => 0,
-        #},
+        {
+            argv => [qw/-w ID::** foo/],
+            summary => 'Select all ID::* wordlists (wildcard will be expanded)',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+
         {
             argv => [qw/--lang FR foo/],
             summary => 'Select French wordlists (multiple --lang allowed)',
