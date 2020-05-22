@@ -252,6 +252,7 @@ _
 };
 sub wordlist {
     require Encode;
+    require WordListUtil::CLI;
 
     my %args = @_;
 
@@ -301,7 +302,7 @@ sub wordlist {
             return [200] unless @$wordlists;
             my %all_stats;
             for my $wl (@$wordlists) {
-                my $mod = "WordList::$wl";
+                my $mod = "WordList::$wl"; $mod =~ s/=.*//;
                 (my $modpm = "$mod.pm") =~ s!::!/!g;
                 require $modpm;
                 if (@$wordlists == 1) {
@@ -314,24 +315,9 @@ sub wordlist {
         }
 
         # optimize random picking when there's only one wordlist to pick from
-        if ($random && @$wordlists == 1) {
-            no strict 'refs';
-            my $mod = "WordList::$wordlists->[0]";
-            (my $modpm = "$mod.pm") =~ s!::!/!g;
-            require $modpm;
-            my $dynamic = !${"$mod\::DYNAMIC"};
-
-            # not really faster than using each_word()
-            #if (!$dynamic && !$num) {
-            #    my $wl = $mod->new;
-            #    my $fh = \*{"$mod\::DATA"};
-            #    return [200, "OK", [shuffle <$fh>]];
-            #}
-
-            if ($num > 0 && $num <= 100) {
-                my $wl = $mod->new;
-                return [200, "OK", [$wl->pick($num)]];
-            }
+        if ($random && @$wordlists == 1 && $num > 0 && $num <= 100) {
+            my $wl_obj = WordListUtil::CLI::instantiate_wordlist($wordlists->[0]);
+            return [200, "OK", [$wl_obj->pick($num)]];
         }
 
         my $n = 0;
@@ -360,19 +346,12 @@ sub wordlist {
             return if $i_wordlist >= @$wordlists;
             my $wl = $wordlists->[$i_wordlist];
             unless ($wl_obj) {
-                my $mod = "WordList::$wl";
-                (my $modpm = "$mod.pm") =~ s!::!/!g;
-                log_trace "Loading wordlist module $mod ...";
-                eval {
-                    require $modpm;
-                    $wl_obj = $mod->new;
-                };
-                if ($@) {
-                    warn;
+                log_trace "Instantiating wordlist $wl ...";
+                $wl_obj = WordListUtil::CLI::instantiate_wordlist($wl, 'ignore');
+                unless ($wl_obj) {
                     $i_wordlist++;
                     goto REDO;
                 }
-                $wl_obj->reset_iterator;
             }
             my $word = $wl_obj->next_word;
             unless (defined $word) {
