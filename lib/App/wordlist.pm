@@ -313,24 +313,34 @@ sub wordlist {
             return [200, "OK", \%all_stats];
         }
 
-        # optimize: use the wordlist module's pick() if we only use a single
-        # wordlist
-        if ($random && @$wordlists == 1 && $num > 0 && $num <= 100) {
+        # optimize random picking when there's only one wordlist to pick from
+        if ($random && @$wordlists == 1) {
             no strict 'refs';
             my $mod = "WordList::$wordlists->[0]";
             (my $modpm = "$mod.pm") =~ s!::!/!g;
             require $modpm;
-            my $stats = \%{"$mod\::STATS"};
-            my $wl;
-            if (!${"$mod\::DYNAMIC"} &&
-                    $stats && $stats->{num_words} > 50_000) {
-                require WordListMod;
-                $wl = WordListMod::get_mod_wordlist(
-                    $wordlists->[0], "RandomSeekPick");
-            } else {
-                $wl = $mod->new;
+            my $dynamic = !${"$mod\::DYNAMIC"};
+
+            # not really faster than using each_word()
+            #if (!$dynamic && !$num) {
+            #    my $wl = $mod->new;
+            #    my $fh = \*{"$mod\::DATA"};
+            #    return [200, "OK", [shuffle <$fh>]];
+            #}
+
+            if ($num > 0 && $num <= 100) {
+                my $stats = \%{"$mod\::STATS"};
+                my $wl;
+                if (!$dynamic &&
+                        $stats && $stats->{num_words} > 50_000) {
+                    require WordListMod;
+                    $wl = WordListMod::get_mod_wordlist(
+                        $wordlists->[0], "RandomSeekPick");
+                } else {
+                    $wl = $mod->new;
+                }
+                return [200, "OK", [$wl->pick($num)]];
             }
-            return [200, "OK", [$wl->pick($num)]];
         }
 
         my $n = 0;
