@@ -322,7 +322,8 @@ sub wordlist {
             require $modpm;
             my $stats = \%{"$mod\::STATS"};
             my $wl;
-            if ($stats && $stats->{num_words} > 50_000) {
+            if (!${"$mod\::DYNAMIC"} &&
+                    $stats && $stats->{num_words} > 50_000) {
                 require WordListMod;
                 $wl = WordListMod::get_mod_wordlist(
                     $wordlists->[0], "RandomSeekPick");
