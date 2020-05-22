@@ -117,7 +117,7 @@ _
         action => {
             schema  => ['str*', in=>[
                 'list_cpan', 'list_installed',
-                'grep',
+                'grep', 'stat',
             ]],
             default => 'grep',
             cmdline_aliases => {
@@ -130,6 +130,11 @@ _
                     summary=>'List WordList::* modules on CPAN',
                     is_flag => 1,
                     code => sub { my $args=shift; $args->{action} = 'list_cpan' },
+                },
+                s => {
+                    summary=>'Show statistics contained in the wordlist modules',
+                    is_flag => 1,
+                    code => sub { my $args=shift; $args->{action} = 'stat' },
                 },
             },
         },
@@ -263,7 +268,7 @@ sub wordlist {
     my $use_color = ($color eq 'always' ? 1 : $color eq 'never' ? 0 : undef)
         // $ENV{COLOR} // (-t STDOUT);
 
-    if ($action eq 'grep') {
+    if ($action eq 'grep' || $action eq 'stat') {
         # convert /.../ in arg to regex
         for (@$arg) {
             $_ = Encode::decode('UTF-8', $_);
@@ -287,8 +292,26 @@ sub wordlist {
                 push @$wordlists, $rec->{name};
             }
         }
+
         $wordlists = [shuffle @$wordlists] if $random;
         log_trace "Wordlists to use: %s", $wordlists;
+
+        if ($action eq 'stat') {
+            no strict 'refs';
+            return [200] unless @$wordlists;
+            my %all_stats;
+            for my $wl (@$wordlists) {
+                my $mod = "WordList::$wl";
+                (my $modpm = "$mod.pm") =~ s!::!/!g;
+                require $modpm;
+                if (@$wordlists == 1) {
+                    return [200, "OK", \%{"$mod\::STATS"}];
+                } else {
+                    $all_stats{$wl} = \%{"$mod\::STATS"};
+                }
+            }
+            return [200, "OK", \%all_stats];
+        }
 
         my $n = 0;
 
@@ -319,7 +342,10 @@ sub wordlist {
                 my $mod = "WordList::$wl";
                 (my $modpm = "$mod.pm") =~ s!::!/!g;
                 log_trace "Loading wordlist module $mod ...";
-                eval { require $modpm; $wl_obj = $mod->new };
+                eval {
+                    require $modpm;
+                    $wl_obj = $mod->new;
+                };
                 if ($@) {
                     warn;
                     $i_wordlist++;
@@ -384,6 +410,8 @@ sub wordlist {
             }
             $res = [200, "OK", \@words];
         }
+
+      RETURN_RES:
         $res;
 
     } elsif ($action eq 'list_installed') {
