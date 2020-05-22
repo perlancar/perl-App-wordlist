@@ -294,7 +294,7 @@ sub wordlist {
         }
 
         $wordlists = [shuffle @$wordlists] if $random;
-        log_trace "Wordlists to use: %s", $wordlists;
+        log_trace "Wordlist(s) to use: %s", $wordlists;
 
         if ($action eq 'stat') {
             no strict 'refs';
@@ -311,6 +311,25 @@ sub wordlist {
                 }
             }
             return [200, "OK", \%all_stats];
+        }
+
+        # optimize: use the wordlist module's pick() if we only use a single
+        # wordlist
+        if ($random && @$wordlists == 1 && $num > 0 && $num <= 100) {
+            no strict 'refs';
+            my $mod = "WordList::$wordlists->[0]";
+            (my $modpm = "$mod.pm") =~ s!::!/!g;
+            require $modpm;
+            my $stats = \%{"$mod\::STATS"};
+            my $wl;
+            if ($stats && $stats->{num_words} > 50_000) {
+                require WordListMod;
+                $wl = WordListMod::get_mod_wordlist(
+                    $wordlists->[0], "RandomSeekPick");
+            } else {
+                $wl = $mod->new;
+            }
+            return [200, "OK", [$wl->pick($num)]];
         }
 
         my $n = 0;
