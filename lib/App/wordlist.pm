@@ -329,16 +329,7 @@ sub wordlist {
             #}
 
             if ($num > 0 && $num <= 100) {
-                my $stats = \%{"$mod\::STATS"};
-                my $wl;
-                if (!$dynamic &&
-                        $stats && $stats->{num_words} > 50_000) {
-                    require WordListMod;
-                    $wl = WordListMod::get_mod_wordlist(
-                        $wordlists->[0], "RandomSeekPick");
-                } else {
-                    $wl = $mod->new;
-                }
+                my $wl = $mod->new;
                 return [200, "OK", [$wl->pick($num)]];
             }
         }
