@@ -1,3 +1,9 @@
+0.273   2020-05-22  Released-By: PERLANCAR; Urgency: medium
+
+	- No longer apply WordListMod::RandomSeekPick; let the wordlist modules
+	  themselves decide whether they want the behavior.
+
+
 0.272   2020-05-22  Released-By: PERLANCAR; Urgency: medium
 
 	- [optimize] When random-picking from a single wordlist, use the
