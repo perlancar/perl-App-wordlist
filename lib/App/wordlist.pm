@@ -494,14 +494,6 @@ See the included script L<wordlist>.
 Set color on/off when --color=auto (the default).
 
 
-=head1 FAQ
-
-=head2 How to make wordlist return words in random order?
-
-The C<--random> (C<-r>) option was removed in v0.268. To return random words,
-you can pipe the output of C<wordlist> to C<shuf> or other similar utility.
-
-
 =head1 SEE ALSO
 
 L<App::GamesWordlist> (L<games-wordlist>) which greps from
