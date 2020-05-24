@@ -340,6 +340,7 @@ sub wordlist {
         };
 
         my $i_wordlist = 0;
+        my $nth_word;
         my $wl_obj;
         my $code_return_word = sub {
           REDO:
@@ -352,8 +353,9 @@ sub wordlist {
                     $i_wordlist++;
                     goto REDO;
                 }
+                $nth_word = 0;
             }
-            my $word = $wl_obj->next_word;
+            my $word = $nth_word++ ? $wl_obj->next_word : $wl_obj->first_word;
             unless (defined $word) {
                 undef $wl_obj;
                 $i_wordlist++;
