@@ -1,3 +1,14 @@
+0.274   2020-05-24  Released-By: PERLANCAR; Urgency: medium
+
+	- Support loading parameterized wordlist with syntax -w
+	  Mod=param1,param2,...
+
+	- [bugfix] Call first_word() first, then next_word(); don't go
+	  straight to next_word().
+
+	- [doc] Remove old FAQ item (--random has been re-added).
+
+
 0.273   2020-05-22  Released-By: PERLANCAR; Urgency: medium
 
 	- No longer apply WordListMod::RandomSeekPick; let the wordlist modules
