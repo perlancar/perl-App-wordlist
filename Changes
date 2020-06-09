@@ -1,3 +1,9 @@
+0.276   2020-06-09  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] Forgot to replace another instance of WordListUtil::CLI
+	  usage.
+
+
 0.275   2020-06-09  Released-By: PERLANCAR; Urgency: medium
 
 	- Replace WordListUtil::CLI with the more general
