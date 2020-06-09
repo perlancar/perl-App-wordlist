@@ -252,7 +252,7 @@ _
 };
 sub wordlist {
     require Encode;
-    require WordListUtil::CLI;
+    require Module::Load::Util;
 
     my %args = @_;
 
@@ -316,7 +316,8 @@ sub wordlist {
 
         # optimize random picking when there's only one wordlist to pick from
         if ($random && @$wordlists == 1 && $num > 0 && $num <= 100) {
-            my $wl_obj = WordListUtil::CLI::instantiate_wordlist($wordlists->[0]);
+            my $wl_obj = Module::Load::Util::instantiate_class_with_optional_args(
+                {ns_prefix=>"WordList"}, $wordlists->[0]);
             return [200, "OK", [$wl_obj->pick($num)]];
         }
 
