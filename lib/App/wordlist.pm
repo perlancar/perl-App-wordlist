@@ -349,7 +349,11 @@ sub wordlist {
             my $wl = $wordlists->[$i_wordlist];
             unless ($wl_obj) {
                 log_trace "Instantiating wordlist $wl ...";
-                $wl_obj = WordListUtil::CLI::instantiate_wordlist($wl, 'ignore');
+                eval {
+                    $wl_obj = Module::Load::Util::instantiate_class_with_optional_args(
+                        {ns_prefix=>"WordList"}, $wl);
+                };
+                warn if $@;
                 unless ($wl_obj) {
                     $i_wordlist++;
                     goto REDO;
