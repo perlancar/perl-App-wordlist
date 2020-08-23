@@ -236,7 +236,7 @@ _
             'x.doc.show_result' => 0,
         },
         {
-            argv => [qw/-w MetaSyntactic=theme,dangdut/],
+            argv => ['-w', 'MetaSyntactic=theme,dangdut'],
             summary => 'Select a wordlist with parameters',
             test => 0,
             'x.doc.show_result' => 0,
