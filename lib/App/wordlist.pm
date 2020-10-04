@@ -498,6 +498,8 @@ Set color on/off when --color=auto (the default).
 
 =head1 SEE ALSO
 
+L<App::WordListUtils>
+
 L<App::GamesWordlist> (L<games-wordlist>) which greps from
 C<Games::Word::Wordlist::*> instead.
 
