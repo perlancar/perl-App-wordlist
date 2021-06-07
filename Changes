@@ -1,3 +1,10 @@
+0.277   2021-06-07  Released-By: PERLANCAR; Urgency: low
+
+	- No functional changes.
+
+	- [doc] Mention arraydata, hashdata, and tabledata.
+
+
 0.276   2020-06-09  Released-By: PERLANCAR; Urgency: medium
 
 	- [bugfix] Forgot to replace another instance of WordListUtil::CLI
