@@ -507,3 +507,7 @@ L<App::GamesWordlist> (L<games-wordlist>) which greps from
 C<Games::Word::Wordlist::*> instead.
 
 L<WordList> and C<WordList::*> modules.
+
+L<arraydata> from L<App::arraydata>, L<hashdata> from L<App::hashdata>, and
+L<tabledata> from L<App::tabledata>. These are newer projects that will
+supersede WordList one day.
