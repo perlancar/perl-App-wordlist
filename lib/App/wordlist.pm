@@ -81,6 +81,7 @@ $SPEC{wordlist} = {
         ignore_case => {
             schema  => 'bool',
             default => 1,
+            cmdline_aliases => {i=>{}},
         },
         len => {
             schema  => 'int*',
