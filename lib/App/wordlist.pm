@@ -69,6 +69,41 @@ sub _list_installed {
     \@res;
 }
 
+sub _word_has_chars_unordered {
+    my ($word, $chars, $ci) = @_;
+
+    if ($ci) {
+        $word = lc $word;
+        $chars = lc $chars;
+    }
+
+    for my $i (0..length($chars)-1) {
+        my $char = substr($chars, $i, 1);
+        $word =~ s/\Q$char\E// or return 0;
+    }
+    1;
+}
+
+sub _word_has_chars_ordered {
+    my ($word, $chars, $ci) = @_;
+
+    if ($ci) {
+        $word = lc $word;
+        $chars = lc $chars;
+    }
+
+    my $last_index;
+    for my $i (0..length($chars)-1) {
+        my $char = substr($chars, $i, 1);
+        my $index = index($word, $char);
+        return 0 if $index < 0;
+        return 0 if defined $last_index && $index < $last_index;
+        $last_index = $index;
+        $word =~ s/\Q$char\E//;
+    }
+    1;
+}
+
 $SPEC{wordlist} = {
     v => 1.1,
     summary => 'Grep words from WordList::*',
@@ -155,6 +190,14 @@ When returning grep result, this means also returning wordlist name.
 _
             schema  => 'bool',
         },
+        chars_unordered => {
+            summary => 'Specify possible characters for the word (unordered)',
+            schema => 'str*',
+        },
+        chars_ordered => {
+            summary => 'Specify possible characters for the word (ordered)',
+            schema => 'str*',
+        },
         langs => {
             'x.name.is_plural' => 1,
             summary => 'Only include wordlists of certain language(s)',
@@ -220,6 +263,18 @@ _
         {
             argv => [qw/-w ID::** foo/],
             summary => 'Select all ID::* wordlists (wildcard will be expanded)',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/-w EN::Enable --len 6 -i --chars-unordered bobleg/],
+            summary => 'Print all words from EN::Enable wordlist that are 6 characters long and have the letters BOBLEG (in no particular order); great for cheats in word forming games',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/-w EN::Enable --len 6 -i --chars-ordered BGL/],
+            summary => 'Print all words from EN::Enable wordlist that are 6 characters long and have the letters B,G,L (in that order); great for finding crossword puzzle answers',
             test => 0,
             'x.doc.show_result' => 0,
         },
@@ -375,6 +430,11 @@ sub wordlist {
                 _length_in_graphemes($word) < $args{min_len};
             goto REDO if defined($args{max_len}) &&
                 _length_in_graphemes($word) > $args{max_len};
+
+            goto REDO if defined $args{chars_unordered} &&
+                !_word_has_chars_unordered($word, $args{chars_unordered}, $ci);
+            goto REDO if defined $args{chars_ordered} &&
+                !_word_has_chars_ordered($word, $args{chars_ordered}, $ci);
 
             my $cmpword = $ci ? lc($word) : $word;
             my $match_arg;
