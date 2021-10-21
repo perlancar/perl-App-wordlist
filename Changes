@@ -1,7 +1,14 @@
-0.279   2021-10-21  Released-By: PERLANCAR; Urgency: medium
+0.280   2021-10-21  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] Allow extraneous characters in --chars-unordered (2nd
+	  attempt).
+
+
+0.279   2021-10-21  Released-By: PERLANCAR; Urgency: medium; Broken: yes
 
 	- [bugfix] Allow --chars-ordered & --chars-unordered to contain
-	  extraneous characters.
+	  extraneous characters. UPDATE: this release does not contain a proper
+	  fix.
 
 
 0.278   2021-10-21  Released-By: PERLANCAR; Urgency: medium
