@@ -73,12 +73,15 @@ sub _list_installed {
 sub _word_has_chars_unordered {
     my ($word, $chars, $ci) = @_;
 
+    return 1 unless length $word;
+
     if ($ci) {
         $word = lc $word;
         $chars = lc $chars;
     }
 
     for my $i (0..length($chars)-1) {
+        return 1 unless length $word;
         my $char = substr($chars, $i, 1);
         $word =~ s/\Q$char\E// or return 0;
     }
@@ -88,6 +91,8 @@ sub _word_has_chars_unordered {
 sub _word_has_chars_ordered {
     my ($word, $chars, $ci) = @_;
 
+    return 1 unless length $word;
+
     if ($ci) {
         $word = lc $word;
         $chars = lc $chars;
@@ -95,6 +100,7 @@ sub _word_has_chars_ordered {
 
     my $last_index;
     for my $i (0..length($chars)-1) {
+        return 1 unless length $word;
         my $char = substr($chars, $i, 1);
         my $index = index($word, $char);
         return 0 if $index < 0;
