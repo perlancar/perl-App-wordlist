@@ -1,3 +1,9 @@
+0.279   2021-10-21  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] Allow --chars-ordered & --chars-unordered to contain
+	  extraneous characters.
+
+
 0.278   2021-10-21  Released-By: PERLANCAR; Urgency: medium
 
 	- Add options: --chars-ordered, --chars-unordered.
