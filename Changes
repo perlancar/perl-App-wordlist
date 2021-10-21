@@ -1,3 +1,10 @@
+0.278   2021-10-21  Released-By: PERLANCAR; Urgency: medium
+
+	- Add options: --chars-ordered, --chars-unordered.
+
+	- [ux] Add -i short option alias for --ignore-case.
+
+
 0.277   2021-06-07  Released-By: PERLANCAR; Urgency: low
 
 	- No functional changes.

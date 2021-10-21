@@ -1,9 +1,5 @@
+## no critic: InputOutput::ProhibitInteractiveTest
 package App::wordlist;
-
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
 
 use 5.010001;
 use strict;
@@ -11,6 +7,11 @@ use warnings;
 use Log::ger;
 
 use List::Util qw(shuffle);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our %SPEC;
 
