@@ -1,3 +1,11 @@
+0.281   2022-07-22  Released-By: PERLANCAR; Urgency: medium
+
+        - Add option -b (--wordlist-bundle) to add a bundle of wordlists
+          (in Acme::CPANModules::WordListBundle::*).
+
+        - Add action 'list_selected' to list selected wordlists.
+
+
 0.280   2021-10-21  Released-By: PERLANCAR; Urgency: medium
 
 	- [bugfix] Allow extraneous characters in --chars-unordered (2nd
