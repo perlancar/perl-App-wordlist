@@ -411,6 +411,48 @@ _
         },
     ],
     'cmdline.default_format' => 'text-simple',
+    'x.doc.faq' => <<'_',
+
+## How to select multiple wordlists? It's cumbersome having to -w WORDLIST1 -w WORDLIST2 and so on!
+
+You can specify wildcard in `-w` option, e.g. if you want to include all English
+wordlists you can use `-w EN::*` or `-w EN::**` (`**` recurses while `*` only
+matches one level deep).
+
+Or you can also use `-b` option. Some people bundle wordlists together and put
+them up on CPAN in the `Acme::CPANModules::WordListBundle::*` namespace. You can
+install those modules first then use the wordlist bundle.
+
+## Can `wordlist` help me solve Wordle?
+
+Yes, using regex or the `--chars-ordered` and `--chars-unordered` options. For
+example, if you have:
+
+    T W _ S _
+
+(3 letters with the correct position), you can use:
+
+    % wordlist -w EN::Enable '/^tw.s./' --len 5
+    twist
+
+or:
+
+    % wordlist -w EN::Enable --chars-ordered tws --len 5
+    tawse
+    thaws
+    ...
+    twist
+    twits
+
+Another example, if you have:
+
+    W* T* _ S _
+
+(2 letters with the incorrect position and 1 letter in the correct position),
+you can use:
+
+    % wordlist -w EN::Enable --chars-unordered wts --len 5 '/^...s.$/'
+_
 };
 sub wordlist {
     require Encode;
