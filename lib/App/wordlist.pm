@@ -15,7 +15,7 @@ use List::Util qw(shuffle);
 
 our %SPEC;
 
-our %arg_wordlists = (
+our %argspecopt_wordlists = (
     wordlists => {
         'x.name.is_plural' => 1,
         schema => ['array*' => {
@@ -34,6 +34,31 @@ our %arg_wordlists = (
                 ci    => 1,
             );
         },
+        tags => ['category:module-selection'],
+    },
+);
+
+our %argspecopt_wordlist_bundles = (
+    wordlist_bundles => {
+        'x.name.is_plural' => 1,
+        'x.name.singular' => 'wordlist_bundle',
+        schema => ['array*' => {
+            of => 'str*', # for the moment we need to use 'str' instead of 'perl::modname' due to Perinci::Sub::GetArgs::Argv limitation
+            'x.perl.coerce_rules'=>[ ['From_str_or_array::expand_perl_modname_wildcard'=>{ns_prefix=>"WordList"}] ],
+        }],
+        summary => 'Select one or more wordlist bundle (Acme::CPANModules::WordListBundle::*) modules',
+        cmdline_aliases => {b=>{}},
+        element_completion => sub {
+            require Complete::Util;
+
+            my %args = @_;
+            Complete::Util::complete_array_elem(
+                word  => $args{word},
+                array => [map {$_->{name}} @{ _list_installed_bundles() }],
+                ci    => 1,
+            );
+        },
+        tags => ['category:module-selection'],
     },
 );
 
@@ -65,6 +90,34 @@ sub _list_installed {
             name => $wl,
             lang => $lang,
             path => $mods->{$wl0}{module_path},
+        };
+     }
+    \@res;
+}
+
+sub _list_installed_bundles {
+    require Module::List;
+    my $mods = Module::List::list_modules(
+        "Acme::CPANModules::WordListBundle::",
+        {
+            list_modules  => 1,
+            list_pod      => 0,
+            recurse       => 1,
+            return_path   => 1,
+        });
+    my @res;
+    for my $wlb0 (sort keys %$mods) {
+        (my $wlb = $wlb0) =~ s/\AAcme::CPANModules::WordListBundle:://;
+
+        my $lang = '';
+        if ($wlb =~ /^(\w\w)::/) {
+            $lang = $1;
+        }
+
+        push @res, {
+            name => $wlb,
+            lang => $lang,
+            path => $mods->{$wlb0}{module_path},
         };
      }
     \@res;
@@ -114,20 +167,25 @@ $SPEC{wordlist} = {
             schema => ['array*' => of => 'str*'],
             pos => 0,
             greedy => 1,
+            tags => ['category:word-filtering'],
         },
         ignore_case => {
             schema  => 'bool',
             default => 1,
             cmdline_aliases => {i=>{}},
+            tags => ['category:word-filtering'],
         },
         len => {
             schema  => 'int*',
+            tags => ['category:word-filtering'],
         },
         min_len => {
             schema  => 'int*',
+            tags => ['category:word-filtering'],
         },
         max_len => {
             schema  => 'int*',
+            tags => ['category:word-filtering'],
         },
         num => {
             summary => 'Return (at most) this number of words (0 = unlimited)',
@@ -147,15 +205,20 @@ _
             cmdline_aliases => {r=>{}},
         },
 
-        %arg_wordlists,
+        %argspecopt_wordlists,
+        %argspecopt_wordlist_bundles,
         or => {
             summary => 'Match any word in query instead of the default "all"',
             schema  => 'bool',
+            tags => ['category:word-filtering'],
         },
         action => {
             schema  => ['str*', in=>[
-                'list_cpan', 'list_installed',
-                'grep', 'stat',
+                'list_cpan',
+                'list_installed',
+                'list_selected',
+                'grep',
+                'stat',
             ]],
             default => 'grep',
             cmdline_aliases => {
@@ -175,6 +238,26 @@ _
                     code => sub { my $args=shift; $args->{action} = 'stat' },
                 },
             },
+            description => <<'_',
+
+Action `list_installed` (shortcut option `-l`) will list WordList::* modules
+installed on the local system.
+
+Action `list_cpan` (shortcut option `-L`) will list available WordList::*
+modules on CPAN, either by querying the MetaCPAN site or by querying a local
+mini CPAN using <pm:App::lcpan>.
+
+Action `list_selected` (option `--action=list_selected`) will list the selected
+WordList::* modules (e.g. via `-w` or `-b`).
+
+Action `grep` (the default action) will filter the words from each selected
+wordlists and print them.
+
+Action `stat` (shortcut option `-s`) will show statistics about all the selected
+wordlists.
+
+
+_
         },
         lcpan => {
             schema => 'bool',
@@ -195,10 +278,12 @@ _
         chars_unordered => {
             summary => 'Specify possible characters for the word (unordered)',
             schema => 'str*',
+            tags => ['category:word-filtering'],
         },
         chars_ordered => {
             summary => 'Specify possible characters for the word (ordered)',
             schema => 'str*',
+            tags => ['category:word-filtering'],
         },
         langs => {
             'x.name.is_plural' => 1,
@@ -224,6 +309,7 @@ _
                 Complete::Util::complete_array_elem(
                     word => $args{word}, array => \@langs);
             },
+            tags => ['category:module-selection'],
         },
         color => {
             summary => 'When to highlight search string/matching pattern with color',
@@ -327,7 +413,7 @@ sub wordlist {
     my $use_color = ($color eq 'always' ? 1 : $color eq 'never' ? 0 : undef)
         // $ENV{COLOR} // (-t STDOUT);
 
-    if ($action eq 'grep' || $action eq 'stat') {
+    if ($action eq 'grep' || $action eq 'stat' || $action eq 'list_selected') {
         # convert /.../ in arg to regex
         for (@$arg) {
             $_ = Encode::decode('UTF-8', $_);
@@ -339,10 +425,41 @@ sub wordlist {
         }
 
         my @res;
-        my $wordlists;
+        my $wordlists = [];
+        my $has_specified_list;
+
+        if ($args{wordlist_bundles}) {
+            $has_specified_list++;
+            for my $wb (@{ $args{wordlist_bundles} }) {
+                my $wbmod = "Acme::CPANModules::WordListBundle::$wb";
+                (my $wbmodpm = "$wbmod.pm") =~ s!::!/!g;
+                require $wbmodpm;
+
+                my $list;
+                {
+                    no strict 'refs'; ## no critic: TestingAndDebugging::ProhibitNoStrict
+                    $list = ${"$wbmod\::LIST"};
+                }
+
+                my $i = -1;
+                for my $entry (@{ $list->{entries} }) {
+                    $i++;
+                    my $mod = $entry->{module};
+                    $mod =~ s/\AWordList::// or do {
+                        warn "Wordlist bundle module $wbmod: entry[$i]: module is not WordList::, skipped";
+                        next;
+                    };
+                    push @$wordlists, $mod;
+                }
+            } # for $wb
+        }
+
         if ($args{wordlists}) {
-            $wordlists = $args{wordlists};
-        } else {
+            $has_specified_list++;
+            push @{ $wordlists }, @{ $args{wordlists} };
+        }
+
+        unless ($has_specified_list) {
             $wordlists = [];
             for my $rec (@$list_installed) {
                 if ($args{langs} && @{ $args{langs} }) {
@@ -354,6 +471,10 @@ sub wordlist {
 
         $wordlists = [shuffle @$wordlists] if $random;
         log_trace "Wordlist(s) to use: %s", $wordlists;
+
+        if ($action eq 'list_selected') {
+            return [200, "OK", $wordlists];
+        }
 
         if ($action eq 'stat') {
             no strict 'refs';
