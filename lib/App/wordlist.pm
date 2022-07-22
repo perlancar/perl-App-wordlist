@@ -355,6 +355,24 @@ _
             'x.doc.show_result' => 0,
         },
         {
+            argv => [qw/-b Proverbs foo/],
+            summary => 'Select a bunch of wordlists via wordlist bundle (Acme::CPANModules::WordListBundle::* module)',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/-w Phrase::**::Proverb::** foo/],
+            summary => 'An alternative to select all proverb wordlists',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
+            argv => [qw/-w Phrase::**::Proverb::** --action=list_selected/],
+            summary => 'Check to see which wordlists we are selecting via `-w` with wildcards or via `-b`',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
             argv => [qw/-w EN::Enable --len 6 -i --chars-unordered bobleg/],
             summary => 'Print all words from EN::Enable wordlist that are 6 characters long and have the letters BOBLEG (in no particular order); great for cheats in word forming games',
             test => 0,
