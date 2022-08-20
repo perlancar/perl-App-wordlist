@@ -491,7 +491,7 @@ _
             tags => ['category:action-test'],
         },
         {
-            argv => [qw/-w Password::** -P 'RockYou' -t foobar 123456 someGoodPass923/],
+            argv => [qw/-w Password::** -P RockYou -t foobar 123456 someGoodPass923/],
             summary => 'Check some passwords against all Password wordlists except those matching /RockYou/ regex',
             test => 0,
             'x.doc.show_result' => 0,
