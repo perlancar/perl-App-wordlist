@@ -65,6 +65,11 @@ our %argspecsopt_exclude_wordlist = (
         cmdline_aliases => {P=>{}},
         tags => ['category:module-selection'],
     },
+    exclude_dynamic_wordlists => {
+        schema => 'bool*',
+        cmdline_aliases => {D=>{}},
+        tags => ['category:module-selection'],
+    },
 );
 
 our %argspecopt_wordlist_bundles = (
@@ -366,6 +371,12 @@ _
             'x.doc.show_result' => 0,
         },
         {
+            argv => [qw/-D/],
+            summary => 'Print all words from all static wordlists (dynamic ones are excluded with --exclude-dynamic-wordlists a.k.a. -D)',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
             argv => [qw/foo bar/],
             summary => 'Print all words matching /foo/ and /bar/',
             test => 0,
@@ -627,7 +638,20 @@ sub wordlist {
                     push @$filtered_wordlists, $wl;
                 }
                 $wordlists = $filtered_wordlists;
+            }
 
+            if ($args{exclude_dynamic_wordlists}) {
+                no strict 'refs'; ## no critic: TestingAndDebugging::ProhibitNoStrict
+                my $filtered_wordlists = [];
+              WORDLIST:
+                for my $wl (@$wordlists) {
+                    my $mod = "WordList::$wl"; $mod =~ s/=.*//;
+                    (my $modpm = "$mod.pm") =~ s!::!/!g;
+                    require $modpm;
+                    do { log_trace "Excluding wordlist $wl (--excluded-dynamic-wordlists)"; next WORDLIST } if ${"$mod\::DYNAMIC"};
+                    push @$filtered_wordlists, $wl;
+                }
+                $wordlists = $filtered_wordlists;
             }
         }
 
@@ -639,9 +663,10 @@ sub wordlist {
         }
 
         if ($action eq 'stat') {
-            no strict 'refs';
+            no strict 'refs'; ## no critic: TestingAndDebugging::ProhibitNoStrict
             return [200] unless @$wordlists;
             my %all_stats;
+          WORDLIST:
             for my $wl (@$wordlists) {
                 my $mod = "WordList::$wl"; $mod =~ s/=.*//;
                 (my $modpm = "$mod.pm") =~ s!::!/!g;
