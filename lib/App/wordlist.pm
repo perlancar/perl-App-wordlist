@@ -7,6 +7,7 @@ use warnings;
 use Log::ger;
 
 use List::Util qw(shuffle);
+use Perinci::Sub::Util qw(gen_modified_sub);
 
 # AUTHORITY
 # DATE
@@ -890,6 +891,78 @@ sub wordlist {
 
     }
 }
+
+gen_modified_sub(
+    base_name => 'wordlist',
+    output_name => 'wordlist_wordle',
+    modify_args => {
+        wordlists => sub {
+            $_[0]{default} = ['EN::Wordle'];
+        },
+        len => sub {
+            $_[0]{default} = 5;
+        },
+    },
+    remove_args => [
+        'action',
+        'lcpan',
+        'chars_unordered',
+        'chars_ordered',
+    ],
+    modify_meta => sub {
+        $_[0]{summary} = 'Help solve Wordle';
+        $_[0]{description} = <<'_';
+
+This is a wrapper to <prog:wordlist> designed to be a convenient helper to solve
+Wordle puzzle. By default it greps from the `EN::Wordle` wordlist. It accepts
+5-character pattern like this:
+
+    wt_S_
+
+where lowercase means letter in the incorrect position, uppercase means letter
+in the correct position, and underscore means unguessed. It will convert this
+pattern to regex and the `--chars-unordered` option and pass it to `wordlist`.
+
+_
+        $_[0]{examples} = [
+            {
+                argv => ['wt_S_'],
+                summary => 'W* T* _ S _ (W & T incorrect position, S correct)',
+                test => 0,
+                'x.doc.show_result' => 0,
+            },
+        ];
+    },
+    output_code => sub {
+        my %args = @_;
+
+        $args{arg} //= [];
+        return [400, "I only accept one arg"] if @{ $args{arg} } > 1;
+
+        if (@{ $args{arg} }) {
+            return [400, "Please specify a 5-letter pattern"] if @{ $args{arg} } > 1;
+            my $re = '';
+            my $chars_unordered = '';
+            for my $char (split //, $args{arg}[0]) {
+                if ($char eq '_') {
+                    $re .= '.';
+                } elsif ($char eq uc($char)) {
+                    $re .= quotemeta($char);
+                } else {
+                    $re .= '.';
+                    $chars_unordered .= $char;
+                }
+            }
+            $re = "/\\A$re\\z/";
+            $args{arg} = [$re];
+
+            $args{chars_unordered} = $chars_unordered if length $chars_unordered;
+        }
+
+        log_trace "Arguments passed to wordlist(): %s", \%args;
+        wordlist(%args);
+    },
+);
 
 1;
 # ABSTRACT:
