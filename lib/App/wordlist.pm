@@ -17,12 +17,12 @@ our %SPEC;
 
 our %argspecopt_wordlists = (
     wordlists => {
+        summary => 'Select one or more wordlist modules',
         'x.name.is_plural' => 1,
         schema => ['array*' => {
             of => 'str*', # for the moment we need to use 'str' instead of 'perl::modname' due to Perinci::Sub::GetArgs::Argv limitation
             'x.perl.coerce_rules'=>[ ['From_str_or_array::expand_perl_modname_wildcard'=>{ns_prefix=>"WordList"}] ],
         }],
-        summary => 'Select one or more wordlist modules',
         cmdline_aliases => {w=>{}},
         element_completion => sub {
             require Complete::Util;
@@ -34,6 +34,35 @@ our %argspecopt_wordlists = (
                 ci    => 1,
             );
         },
+        tags => ['category:module-selection'],
+    },
+);
+
+our %argspecsopt_exclude_wordlist = (
+    exclude_wordlists => {
+        'x.name.is_plural' => 1,
+        'x.name.singular' => 'exclude_wordlist',
+        summary => 'Exclude wordlist modules',
+        schema => ['array*' => {
+            of => 'str*', # for the moment we need to use 'str' instead of 'perl::modname' due to Perinci::Sub::GetArgs::Argv limitation
+            'x.perl.coerce_rules'=>[ ['From_str_or_array::expand_perl_modname_wildcard'=>{ns_prefix=>"WordList"}] ],
+        }],
+        element_completion => sub {
+            require Complete::Util;
+
+            my %args = @_;
+            Complete::Util::complete_array_elem(
+                word  => $args{word},
+                array => [map {$_->{name}} @{ _list_installed() }],
+                ci    => 1,
+            );
+        },
+        cmdline_aliases => {X=>{}},
+        tags => ['category:module-selection'],
+    },
+    exclude_wordlist_pattern => {
+        schema => 're_from_str*',
+        cmdline_aliases => {P=>{}},
         tags => ['category:module-selection'],
     },
 );
@@ -161,7 +190,7 @@ sub _word_has_chars_ordered {
 
 $SPEC{wordlist} = {
     v => 1.1,
-    summary => 'Grep words from WordList::*',
+    summary => 'Grep words from (or test them against) WordList::*',
     args => {
         arg => {
             schema => ['array*' => of => 'str*'],
@@ -207,6 +236,9 @@ _
 
         %argspecopt_wordlists,
         %argspecopt_wordlist_bundles,
+
+        %argspecsopt_exclude_wordlist,
+
         or => {
             summary => 'Match any word in query instead of the default "all"',
             schema  => 'bool',
@@ -438,7 +470,21 @@ _
             summary => 'Check some passwords against a password wordlist',
             test => 0,
             'x.doc.show_result' => 0,
-            tags => ['category:action-stat'],
+            tags => ['category:action-test'],
+        },
+        {
+            argv => [qw/-w Password::** -X Password::RockYou -t foobar 123456 someGoodPass923/],
+            summary => 'Check some passwords against all Password wordlists except Password::RockYou (because it is slow to check)',
+            test => 0,
+            'x.doc.show_result' => 0,
+            tags => ['category:action-test'],
+        },
+        {
+            argv => [qw/-w Password::** -P 'RockYou' -t foobar 123456 someGoodPass923/],
+            summary => 'Check some passwords against all Password wordlists except those matching /RockYou/ regex',
+            test => 0,
+            'x.doc.show_result' => 0,
+            tags => ['category:action-test'],
         },
     ],
     'cmdline.default_format' => 'text-simple',
@@ -557,6 +603,31 @@ sub wordlist {
                     next unless grep { $rec->{lang} eq uc($_) } @{$args{langs}};
                 }
                 push @$wordlists, $rec->{name};
+            }
+        }
+
+      EXCLUDE_WORDLISTS: {
+            if ($args{exclude_wordlists} && @{ $args{exclude_wordlists} }) {
+                my $filtered_wordlists = [];
+              WORDLIST:
+                for my $wl (@$wordlists) {
+                    for my $exwl (@{ $args{exclude_wordlists} }) {
+                        do { log_trace "Excluding wordlist $wl (--excluded-wordlist)"; next WORDLIST } if $wl eq $exwl;
+                    }
+                    push @$filtered_wordlists, $wl;
+                }
+                $wordlists = $filtered_wordlists;
+            }
+
+            if (defined $args{exclude_wordlist_pattern}) {
+                my $filtered_wordlists = [];
+              WORDLIST:
+                for my $wl (@$wordlists) {
+                    do { log_trace "Excluding wordlist $wl (--excluded-wordlist-pattern)"; next WORDLIST } if $wl =~ $args{exclude_wordlist_pattern};
+                    push @$filtered_wordlists, $wl;
+                }
+                $wordlists = $filtered_wordlists;
+
             }
         }
 
