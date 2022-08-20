@@ -1,3 +1,10 @@
+0.289   2022-08-20  Released-By: PERLANCAR; Urgency: low
+
+        - No functional changes.
+
+        - [cli wordlist-wordle] Tweak examples.
+
+
 0.288   2022-08-20  Released-By: PERLANCAR; Urgency: medium
 
         - [bugfix] Fix wordlist-wordle, allow multiple guesses.
