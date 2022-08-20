@@ -927,7 +927,13 @@ _
         $_[0]{examples} = [
             {
                 argv => ['wt_S_'],
-                summary => 'W* T* _ S _ (W & T incorrect position, S correct)',
+                summary => 'One guess (lowercase means incorrect position)',
+                test => 0,
+                'x.doc.show_result' => 0,
+            },
+            {
+                argv => ['___s_', '_o___', '___ht', '_L___'],
+                summary => 'For guesses (lowercase means incorrect position)',
                 test => 0,
                 'x.doc.show_result' => 0,
             },
@@ -937,27 +943,27 @@ _
         my %args = @_;
 
         $args{arg} //= [];
-        return [400, "I only accept one arg"] if @{ $args{arg} } > 1;
 
-        if (@{ $args{arg} }) {
-            return [400, "Please specify a 5-letter pattern"] if @{ $args{arg} } > 1;
+        my $chars_unordered = '';
+        my @new_arg;
+        for my $arg (@{ $args{arg} }) {
             my $re = '';
-            my $chars_unordered = '';
-            for my $char (split //, $args{arg}[0]) {
+            for my $char (split //, $arg) {
                 if ($char eq '_') {
                     $re .= '.';
                 } elsif ($char eq uc($char)) {
-                    $re .= quotemeta($char);
+                    $re .= quotemeta(lc $char);
                 } else {
-                    $re .= '.';
-                    $chars_unordered .= $char;
+                    $re .= "[^".quotemeta($char)."]";
+                    $chars_unordered .= $char unless index($chars_unordered, $char) >= 0;
                 }
             }
             $re = "/\\A$re\\z/";
-            $args{arg} = [$re];
-
-            $args{chars_unordered} = $chars_unordered if length $chars_unordered;
+            push @new_arg, $re;
         }
+
+        $args{arg} = \@new_arg;
+        $args{chars_unordered} = $chars_unordered if length $chars_unordered;
 
         log_trace "Arguments passed to wordlist(): %s", \%args;
         wordlist(%args);
