@@ -591,6 +591,7 @@ sub wordlist {
           WORDLIST:
             for my $wl (@$wordlists) {
                 last unless @words;
+                log_debug "Testing against wordlist $wl ...";
                 my $wl_obj;
                 eval {
                     $wl_obj = Module::Load::Util::instantiate_class_with_optional_args(
