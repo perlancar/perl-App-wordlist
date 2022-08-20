@@ -915,25 +915,30 @@ gen_modified_sub(
 
 This is a wrapper to <prog:wordlist> designed to be a convenient helper to solve
 Wordle puzzle. By default it greps from the `EN::Wordle` wordlist. It accepts
-5-character pattern like this:
+a series of guesses in a format like the following:
 
-    wt_S_
+    A^R^isE^
+    Pound
+    might
+    blA^ck
+    PR^ivY^
 
-where lowercase means letter in the incorrect position, uppercase means letter
-in the correct position, and underscore means unguessed. It will convert this
-pattern to regex and the `--chars-unordered` option and pass it to `wordlist`.
+where lowercase means wrong guess, uppercase means correct letter and position,
+while (uppercase) letter followed by a caret (`^`) means the letter exists in
+another position. It will convert these guesses to regex patterns and the
+`--chars-unordered` option and pass it to `wordlist`.
 
 _
         $_[0]{examples} = [
             {
-                argv => ['wt_S_'],
-                summary => 'One guess (lowercase means incorrect position)',
+                argv => ['cR^eEk'],
+                summary => 'One guess',
                 test => 0,
                 'x.doc.show_result' => 0,
             },
             {
-                argv => ['___s_', '_o___', '___ht', '_L___'],
-                summary => 'Four guesses (lowercase means incorrect position)',
+                argv => ['A^R^isE^', 'Pound', 'might', 'blA^ck', 'PR^ivY^'],
+                summary => 'Five guesses',
                 test => 0,
                 'x.doc.show_result' => 0,
             },
@@ -945,17 +950,35 @@ _
         $args{arg} //= [];
 
         my $chars_unordered = '';
+        my $possible_letters = join '', "a".."z";
+        my $nonpresent_letters = '';
         my @new_arg;
         for my $arg (@{ $args{arg} }) {
+            my @chars = split //, $arg;
             my $re = '';
-            for my $char (split //, $arg) {
-                if ($char eq '_') {
-                    $re .= '.';
-                } elsif ($char eq uc($char)) {
-                    $re .= quotemeta(lc $char);
-                } else {
-                    $re .= "[^".quotemeta($char)."]";
+            my %letter_exists;
+            while (@chars) {
+                my $char = shift @chars;
+                return [400, "Invalid letter '$char' in guess '$arg'"] unless $char =~ /[A-Za-z]/;
+                my $caret = @chars && $chars[0] eq '^' ? shift(@chars) : '';
+                my $uc = $char eq uc $char;
+                $char = lc $char;
+
+                if ($caret) { # letter is in another position
+                    my $letters = $possible_letters;
+                    $letters =~ s/$char//;
+                    $re .= "[$letters]";
+                    $letter_exists{$char}++;
                     $chars_unordered .= $char unless index($chars_unordered, $char) >= 0;
+                } elsif ($uc) { # correct guess
+                    $re .= $char;
+                    $letter_exists{$char}++;
+                    $chars_unordered .= $char unless index($chars_unordered, $char) >= 0;
+                } else { # wrong guess
+                    my $letters = $possible_letters;
+                    $letters =~ s/$char//;
+                    $possible_letters =~ s/$char// unless $letter_exists{$char};
+                    $re .= "[$letters]";
                 }
             }
             $re = "/\\A$re\\z/";
