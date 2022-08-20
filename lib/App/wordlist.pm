@@ -167,10 +167,10 @@ sub _word_has_chars_unordered {
 
     for my $i (0..length($chars)-1) {
         my $char = substr($chars, $i, 1);
-        $word =~ s/\Q$char\E//;
+        my $index = index($word, $char);
+        return 0 if $index < 0;
     }
-
-    return length $word ? 0:1;
+    1;
 }
 
 sub _word_has_chars_ordered {
