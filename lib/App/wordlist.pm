@@ -219,6 +219,7 @@ _
                 'list_selected',
                 'grep',
                 'stat',
+                'test',
             ]],
             default => 'grep',
             cmdline_aliases => {
@@ -236,6 +237,11 @@ _
                     summary=>'Show statistics contained in the wordlist modules',
                     is_flag => 1,
                     code => sub { my $args=shift; $args->{action} = 'stat' },
+                },
+                t => {
+                    summary=>'Test whether words exists in wordlist',
+                    is_flag => 1,
+                    code => sub { my $args=shift; $args->{action} = 'test' },
                 },
             },
             description => <<'_',
@@ -255,6 +261,9 @@ wordlists and print them.
 
 Action `stat` (shortcut option `-s`) will show statistics about all the selected
 wordlists.
+
+Action `test` (shortcut option `-t`) will check whether words are in one of the
+wordlist, using `word_exists()` method on each wordlist.
 
 
 _
@@ -418,8 +427,15 @@ _
             tags => ['category:action-list-cpan'],
         },
         {
-            argv => [qw/-s ID::KBBI/],
+            argv => [qw/-w ID::KBBI -s/],
             summary => 'Show statistics of a wordlist module',
+            test => 0,
+            'x.doc.show_result' => 0,
+            tags => ['category:action-stat'],
+        },
+        {
+            argv => [qw/-w Password::RockYou::BloomOnly -t foobar 123456 someGoodPass923/],
+            summary => 'Check some passwords against a password wordlist',
             test => 0,
             'x.doc.show_result' => 0,
             tags => ['category:action-stat'],
@@ -488,7 +504,7 @@ sub wordlist {
     my $use_color = ($color eq 'always' ? 1 : $color eq 'never' ? 0 : undef)
         // $ENV{COLOR} // (-t STDOUT);
 
-    if ($action eq 'grep' || $action eq 'stat' || $action eq 'list_selected') {
+    if ($action eq 'grep' || $action eq 'stat' || $action eq 'list_selected' || $action eq 'test') {
         # convert /.../ in arg to regex
         for (@$arg) {
             $_ = Encode::decode('UTF-8', $_);
@@ -566,6 +582,32 @@ sub wordlist {
                 }
             }
             return [200, "OK", \%all_stats];
+        }
+
+        if ($action eq 'test') {
+            my @words = @{ $args{arg} };
+            my $res = [200, "OK", [], {'table.fields'=>[qw/word found_in/]}];
+
+          WORDLIST:
+            for my $wl (@$wordlists) {
+                last unless @words;
+                my $wl_obj;
+                eval {
+                    $wl_obj = Module::Load::Util::instantiate_class_with_optional_args(
+                        {ns_prefix=>"WordList"}, $wl);
+                };
+                if ($@) {
+                    warn;
+                    next WORDLIST;
+                }
+                for my $i (reverse (0 .. $#words)) {
+                    if ($wl_obj->word_exists($words[$i])) {
+                        push @{$res->[2]}, {word=>$words[$i], found_in=>$wl};
+                    }
+                }
+            } # for WORDLIST
+
+            return $res;
         }
 
         # optimize random picking when there's only one wordlist to pick from
