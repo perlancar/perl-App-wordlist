@@ -929,13 +929,13 @@ _
                 argv => ['wt_S_'],
                 summary => 'One guess (lowercase means incorrect position)',
                 test => 0,
-                'x.doc.show_result' => 1,
+                'x.doc.show_result' => 0,
             },
             {
                 argv => ['___s_', '_o___', '___ht', '_L___'],
                 summary => 'Four guesses (lowercase means incorrect position)',
                 test => 0,
-                'x.doc.show_result' => 1,
+                'x.doc.show_result' => 0,
             },
         ];
     },
