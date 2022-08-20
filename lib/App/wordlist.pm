@@ -951,7 +951,6 @@ _
 
         my $chars_unordered = '';
         my $possible_letters = join '', "a".."z";
-        my $nonpresent_letters = '';
         my @new_arg;
         for my $arg (@{ $args{arg} }) {
             my @chars = split //, $arg;
