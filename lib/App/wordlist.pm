@@ -398,6 +398,12 @@ _
             'x.doc.show_result' => 0,
         },
         {
+            argv => ['-w', 'MetaSyntactic=theme,dangdut'],
+            summary => 'Select a wordlist with parameters',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+        {
             argv => [qw/-l/],
             summary => 'List installed wordlist modules',
             test => 0,
