@@ -520,12 +520,12 @@ example, if you have:
 
 (3 letters with the correct position), you can use:
 
-    % wordlist -w EN::Enable '/^tw.s./' --len 5
+    % wordlist -w EN::Wordle '/^tw.s./' --len 5
     twist
 
 or:
 
-    % wordlist -w EN::Enable --chars-ordered tws --len 5
+    % wordlist -w EN::Wordle --chars-ordered tws --len 5
     tawse
     thaws
     ...
@@ -539,7 +539,16 @@ Another example, if you have:
 (2 letters with the incorrect position and 1 letter in the correct position),
 you can use:
 
-    % wordlist -w EN::Enable --chars-unordered wts --len 5 '/^...s.$/'
+    % wordlist -w EN::Wordle --chars-unordered wts --len 5 '/^...s.$/'
+
+Included in the distribution is the <prog:wordlist-wordle> script for
+convenience. This CLI defaults to grepping the "EN::Wordle" wordlist and you
+specify something like `wt_S_` for the pattern (lowercase for letter in
+incorrect position, uppercase for letter in correct position, underscore for
+unguessed):
+
+    % wordlist-wordle 'wt_S_'
+
 _
 };
 sub wordlist {
