@@ -911,6 +911,7 @@ gen_modified_sub(
     ],
     modify_meta => sub {
         $_[0]{summary} = 'Help solve Wordle';
+        delete $_[0]{'x.doc.faq'};
         $_[0]{description} = <<'_';
 
 This is a wrapper to <prog:wordlist> designed to be a convenient helper to solve
