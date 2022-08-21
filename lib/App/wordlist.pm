@@ -246,7 +246,7 @@ _
         %argspecsopt_exclude_wordlist,
 
         or => {
-            summary => 'Match any word in query instead of the default "all"',
+            summary => 'Instead of printing words that must match all queries (the default), print words that match any query',
             schema  => 'bool',
             tags => ['category:word-filtering'],
         },
