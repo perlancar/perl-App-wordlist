@@ -251,14 +251,24 @@ _
             tags => ['category:word-filtering'],
         },
         action => {
-            schema  => ['str*', in=>[
-                'list_cpan',
-                'list_installed',
-                'list_selected',
-                'grep',
-                'stat',
-                'test',
-            ]],
+            schema  => ['str*', {
+                in=>[
+                    'list_cpan',
+                    'list_installed',
+                    'list_selected',
+                    'grep',
+                    'stat',
+                    'test',
+                ],
+                'x.in.summaries' => [
+                    'List WordList::* modules on CPAN',
+                    'List WordList::* modules installed locally',
+                    'List WordList::* that are selected for use',
+                    'Grep words from selected WordList::* modules',
+                    'Show statistics for each selected WordList::* modules',
+                    'Test words against selected WordList::* modules',
+                ],
+            }],
             default => 'grep',
             cmdline_aliases => {
                 l => {
@@ -360,7 +370,18 @@ _
         },
         color => {
             summary => 'When to highlight search string/matching pattern with color',
-            schema => ['str*', in=>['never', 'always', 'auto']],
+            schema => ['str*', {
+                in=>[
+                    'never',
+                    'always',
+                    'auto',
+                ],
+                'x.in.summaries' => [
+                    'Never show color',
+                    'Show color if program is run interactively (i.e. not piped)',
+                    'Always show color, regardless of whether program is run through a pipe',
+                ],
+            }],
             default => 'auto',
         },
     },
