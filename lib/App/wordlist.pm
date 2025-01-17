@@ -32,7 +32,6 @@ our %argspecopt_wordlists = (
             Complete::Util::complete_array_elem(
                 word  => $args{word},
                 array => [map {$_->{name}} @{ _list_installed() }],
-                ci    => 1,
             );
         },
         tags => ['category:module-selection'],
@@ -55,7 +54,6 @@ our %argspecsopt_exclude_wordlist = (
             Complete::Util::complete_array_elem(
                 word  => $args{word},
                 array => [map {$_->{name}} @{ _list_installed() }],
-                ci    => 1,
             );
         },
         cmdline_aliases => {X=>{}},
@@ -90,7 +88,6 @@ our %argspecopt_wordlist_bundles = (
             Complete::Util::complete_array_elem(
                 word  => $args{word},
                 array => [map {$_->{name}} @{ _list_installed_bundles() }],
-                ci    => 1,
             );
         },
         tags => ['category:module-selection'],
