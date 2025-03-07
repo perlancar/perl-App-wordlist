@@ -7,7 +7,6 @@ use warnings;
 use Log::ger;
 
 use List::Util qw(shuffle);
-use Perinci::Sub::Util qw(gen_modified_sub);
 
 # AUTHORITY
 # DATE
@@ -909,107 +908,6 @@ sub wordlist {
 
     }
 }
-
-gen_modified_sub(
-    base_name => 'wordlist',
-    output_name => 'wordlist_wordle',
-    modify_args => {
-        wordlists => sub {
-            $_[0]{default} = ['EN::Wordle'];
-        },
-        len => sub {
-            $_[0]{default} = 5;
-        },
-    },
-    remove_args => [
-        'action',
-        'lcpan',
-        'chars_unordered',
-        'chars_ordered',
-    ],
-    modify_meta => sub {
-        $_[0]{summary} = 'Help solve Wordle';
-        delete $_[0]{'x.doc.faq'};
-        $_[0]{description} = <<'_';
-
-This is a wrapper to <prog:wordlist> designed to be a convenient helper to solve
-Wordle puzzle. By default it greps from the `EN::Wordle` wordlist. It accepts
-a series of guesses in a format like the following:
-
-    A^R^isE^
-    Pound
-    might
-    blA^ck
-    PR^ivY^
-
-where lowercase means wrong guess, uppercase means correct letter and position,
-while (uppercase) letter followed by a caret (`^`) means the letter exists in
-another position. It will convert these guesses to regex patterns and the
-`--chars-unordered` option and pass it to `wordlist`.
-
-_
-        $_[0]{examples} = [
-            {
-                argv => ['cR^eEk'],
-                summary => 'One guess',
-                test => 0,
-                'x.doc.show_result' => 0,
-            },
-            {
-                argv => ['A^R^isE^', 'Pound', 'might', 'blA^ck', 'PR^ivY^'],
-                summary => 'Five guesses',
-                test => 0,
-                'x.doc.show_result' => 0,
-            },
-        ];
-    },
-    output_code => sub {
-        my %args = @_;
-
-        $args{arg} //= [];
-
-        my $chars_unordered = '';
-        my $possible_letters = join '', "a".."z";
-        my @new_arg;
-        for my $arg (@{ $args{arg} }) {
-            my @chars = split //, $arg;
-            my $re = '';
-            my %letter_exists;
-            while (@chars) {
-                my $char = shift @chars;
-                return [400, "Invalid letter '$char' in guess '$arg'"] unless $char =~ /[A-Za-z]/;
-                my $caret = @chars && $chars[0] eq '^' ? shift(@chars) : '';
-                my $uc = $char eq uc $char;
-                $char = lc $char;
-
-                if ($caret) { # letter is in another position
-                    my $letters = $possible_letters;
-                    $letters =~ s/$char//;
-                    $re .= "[$letters]";
-                    $letter_exists{$char}++;
-                    $chars_unordered .= $char unless index($chars_unordered, $char) >= 0;
-                } elsif ($uc) { # correct guess
-                    $re .= $char;
-                    $letter_exists{$char}++;
-                    $chars_unordered .= $char unless index($chars_unordered, $char) >= 0;
-                } else { # wrong guess
-                    my $letters = $possible_letters;
-                    $letters =~ s/$char//;
-                    $possible_letters =~ s/$char// unless $letter_exists{$char};
-                    $re .= "[$letters]";
-                }
-            }
-            $re = "/\\A$re\\z/";
-            push @new_arg, $re;
-        }
-
-        $args{arg} = \@new_arg;
-        $args{chars_unordered} = $chars_unordered if length $chars_unordered;
-
-        log_trace "Arguments passed to wordlist(): %s", \%args;
-        wordlist(%args);
-    },
-);
 
 1;
 # ABSTRACT:
